@@ -3,27 +3,44 @@ import React from "react"
 
 
 function NavBar() {
-    const [value, setValue] = React.useState('primary');
+    /* sets which tab is active */
+    const [value, setValue] = React.useState('one');
 
+    /* changes tab state */
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
     };
 
+    /* logo textual styling */
+    const logoText = {
+        lineHeight: 1,
+        fontSize: 25,
+        fontWeight: 'medium',
+        fontStyle: 'oblique'
+    }
+
+    /* active tab styling */
+    const tabStyle = {
+        mx: '4em',
+        '&.Mui-selected': { color: '#69b15f'},
+        '& .MuiTabs-indicator' : {backgroundColor: '#004ea8'}
+    }
+
     return (
     <>
-        <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: 'white'}}>
+        <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: '#e0e0e0'}}>
             <Toolbar disableGutters={true}>
                 <img src='/src/assets/bridge.png' style={{height: 60, width: 'auto'}}></img>
                 <Typography fontSize={50} fontStyle='italic' fontFamily='cursive'>S</Typography>
                 <Stack>
-                    <Typography pt={0.5} lineHeight={1} fontSize={25} fontWeight='medium' fontStyle='oblique'>tructural</Typography>
-                    <Typography lineHeight={1} fontSize={20} fontWeight='medium' fontStyle='oblique'>amples</Typography>
+                    <Typography sx={logoText} pt={0.5} >tructural</Typography>
+                    <Typography sx={{...logoText, fontSize:20}}>amples</Typography>
                 </Stack>
                 <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
-                    <Tabs value={value} onChange={handleChange} textColor="primary" indicatorColor="secondary" aria-label="secondary tabs example">
-                        <Tab value='one' label='Shear & Moment Diagrams'/>
-                        <Tab value='two' label='Foundation Bearing Pressure'/>
-                        <Tab value='three' label='Pier Foundation Depth'/>
+                    <Tabs sx={tabStyle} value={value} onChange={handleChange} aria-label='navigation bar labels'>
+                        <Tab sx={tabStyle} value='one' label='Shear & Moment Diagrams'/>
+                        <Tab sx={tabStyle} value='two' label='Foundation Bearing Pressure'/>
+                        <Tab sx={tabStyle} value='three' label='Pier Foundation Depth'/>
                     </Tabs>
                 </Box>
             </Toolbar>
