@@ -1,8 +1,8 @@
-import { AppBar, Box, Grid, Stack, Tab, Tabs, Toolbar, Typography } from "@mui/material"
+import { AppBar, Box, Stack, Tab, Tabs, Toolbar, Typography } from "@mui/material"
 import React from "react"
+import { Link } from 'react-router-dom';
 
-
-function NavBar() {
+function Navbar() {
     /* sets which tab is active */
     const [value, setValue] = React.useState('one');
 
@@ -38,9 +38,9 @@ function NavBar() {
                 </Stack>
                 <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
                     <Tabs sx={tabStyle} value={value} onChange={handleChange} aria-label='navigation bar labels'>
-                        <Tab sx={tabStyle} value='one' label='Shear & Moment Diagrams'/>
-                        <Tab sx={tabStyle} value='two' label='Foundation Bearing Pressure'/>
-                        <Tab sx={tabStyle} value='three' label='Pier Foundation Depth'/>
+                        <Tab sx={tabStyle} value='one' component={Link} to='/vmdiagram' label='Shear & Moment Diagrams'/>
+                        <Tab sx={tabStyle} value='two' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
+                        <Tab sx={tabStyle} value='three' component={Link} to='/pier' label='Pier Foundation Depth'/>
                     </Tabs>
                 </Box>
             </Toolbar>
@@ -49,4 +49,4 @@ function NavBar() {
     )
 }
 
-export default NavBar
+export default Navbar

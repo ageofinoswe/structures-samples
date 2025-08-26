@@ -1,11 +1,23 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
-import NavBar from './components/navbar'
+import Navbar from './components/Navbar'
+import VMDiagram from './pages/VMDiagram'
+import Foundation from './pages/Foundation'
+import Pier from './pages/Pier'
 
 function App() {
 
   return (
     <>
-      <NavBar/>
+      <BrowserRouter>
+        <Navbar/>
+        <Routes>
+          <Route path='/' element={<VMDiagram />} />
+          <Route path='/vmdiagram' element={<VMDiagram />} />
+          <Route path='/foundation' element={<Foundation />} />
+          <Route path='/pier' element={<Pier />} />
+        </Routes>
+      </BrowserRouter>
     </>
   )
 }
