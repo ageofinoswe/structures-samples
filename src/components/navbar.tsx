@@ -27,25 +27,25 @@ function Navbar() {
     }
 
     return (
-    <>
-        <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: '#e0e0e0'}}>
-            <Toolbar disableGutters={true}>
-                <img src='/src/assets/bridge.png' style={{height: 60, width: 'auto'}}></img>
-                <Typography fontSize={50} fontStyle='italic' fontFamily='cursive'>S</Typography>
-                <Stack>
-                    <Typography sx={logoText} pt={0.5} >tructural</Typography>
-                    <Typography sx={{...logoText, fontSize:20}}>amples</Typography>
-                </Stack>
-                <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
-                    <Tabs sx={tabStyle} value={value} onChange={handleChange} aria-label='navigation bar labels'>
-                        <Tab sx={tabStyle} value='one' component={Link} to='/vmdiagram' label='Shear & Moment Diagrams'/>
-                        <Tab sx={tabStyle} value='two' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
-                        <Tab sx={tabStyle} value='three' component={Link} to='/pier' label='Pier Foundation Depth'/>
-                    </Tabs>
-                </Box>
-            </Toolbar>
-        </AppBar>
-    </>
+        <>
+            <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: '#e0e0e0'}}>
+                <Toolbar disableGutters={true}>
+                    <img src='/src/assets/bridge.png' style={{height: 60, width: 'auto'}}></img>
+                    <Typography fontSize={50} fontStyle='italic' fontFamily='cursive'>S</Typography>
+                    <Stack>
+                        <Typography sx={logoText} pt={0.5} >tructural</Typography>
+                        <Typography sx={{...logoText, fontSize:20}}>amples</Typography>
+                    </Stack>
+                    <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
+                        <Tabs sx={tabStyle} value={value} onChange={handleChange} aria-label='navigation bar labels'>
+                            <Tab sx={tabStyle} value='one' component={Link} to='/vmdiagram' label='Shear & Moment Diagrams'/>
+                            <Tab sx={tabStyle} value='two' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
+                            <Tab sx={tabStyle} value='three' component={Link} to='/pier' label='Pier Foundation Depth'/>
+                        </Tabs>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+        </>
     )
 }
 
