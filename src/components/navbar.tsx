@@ -28,7 +28,7 @@ function Navbar() {
 
     return (
         <>
-            <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: '#e0e0e0'}}>
+            <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: 'white'}}>
                 <Toolbar disableGutters={true}>
                     <img src='/src/assets/bridge.png' style={{height: 60, width: 'auto'}}></img>
                     <Typography fontSize={50} fontStyle='italic' fontFamily='cursive'>S</Typography>
