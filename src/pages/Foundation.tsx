@@ -2,8 +2,9 @@ import { Box, Divider, Grid, Stack, TextField, Typography } from "@mui/material"
 import React from "react";
 import RemoveButton from "../components/RemoveButton";
 import AddButton from "../components/AddButton";
-import Arrow from "../components/Arrow";
-import ArrowInto from "../components/ArrowInto";
+import Arrow from "../components/ArrowUpDown";
+import ArrowInOut from "../components/ArrowInOut";
+import Axis from "../components/Axis";
 
 function Foundation() {
     // interfaces
@@ -27,7 +28,7 @@ function Foundation() {
         'stroke-width': number
     }
 
-    interface svgProps {
+    interface SvgProps {
         viewBox: string,
         width: string,
         height: string,
@@ -128,7 +129,7 @@ function Foundation() {
             {sx: {pr:3}, label: 'y', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'y')},
         ]
     }
-    const foundationProps: (SvgProps: svgProps, rotated?: boolean, section?: boolean) => RectProps = (SvgProps: svgProps, rotated: boolean = false, section: boolean = false) => {
+    const foundationProps: (SvgProps: SvgProps, rotated?: boolean, section?: boolean) => RectProps = (SvgProps: SvgProps, rotated: boolean = false, section: boolean = false) => {
         const viewBox: number[] = SvgProps.viewBox.split(' ').map( (index: string) => Number.parseInt(index));
         const viewBoxWidth: number = viewBox[2];
         const viewBoxHeight: number = viewBox[3];
@@ -149,7 +150,7 @@ function Foundation() {
         }; 
         return foundationProps;
     }
-    const bottomLeftCorner: (svgProps: svgProps, type: 'plan' | 'planRotated' | 'section' | 'sectionRotated' | 'none') => [number, number] = (svgProps: svgProps, type: string) => {
+    const bottomLeftCorner: (svgProps: SvgProps, type: 'plan' | 'planRotated' | 'section' | 'sectionRotated' | 'none') => [number, number] = (svgProps: SvgProps, type: string) => {
         const viewBox: number[] = svgProps.viewBox.split(' ').map( (index: string) => Number.parseInt(index));
         const viewBoxWidth: number = viewBox[2];
         const viewBoxHeight: number = viewBox[3];
@@ -177,7 +178,7 @@ function Foundation() {
 
         return [horizontalShift, verticalShift]
     }
-    const foundationTitle: (svgProps: svgProps) => {x: number, y: number} = (svgProps: svgProps) => {
+    const foundationTitle: (svgProps: SvgProps) => {x: number, y: number} = (svgProps: SvgProps) => {
         const viewBox: number[] = svgProps.viewBox.split(' ').map( (index: string) => Number.parseInt(index));
         return {x: viewBox[2] / 2, y: viewBox[3], textAnchor: 'middle', fontSize: '5px'};
     }
@@ -189,7 +190,7 @@ function Foundation() {
         {label: 'Thickness, in (t)', defaultValue: 0, size: 'small', variant: 'standard', onChange: handleThicknessChange},
     ];
 
-    const svgProps: svgProps = {
+    const SvgProps: SvgProps = {
         viewBox: '0 0 100 60',
         width: '50vw',
         height: '30vw',
@@ -264,37 +265,39 @@ function Foundation() {
             {/* foundation plan and rotated plan*/}
             <Divider />
             <Box display='flex' sx={{ justifyContent: 'center'}}>
-                <svg {...svgProps}>
-                    <rect {...(foundationProps(svgProps, false))}/>
-                    {pointLoads.map( load => <ArrowInto horizontalShift={bottomLeftCorner(svgProps, 'plan')[0] + load.xCoord} verticalShift={bottomLeftCorner(svgProps, 'plan')[1] - load.yCoord}/>)}
-                    <text {...foundationTitle(svgProps)}>Foundation Plan x-x</text>
-                    <text x={bottomLeftCorner(svgProps, 'plan')[0] + width / 2} y={bottomLeftCorner(svgProps, 'plan')[1] + 4} textAnchor="middle" fontSize={4}>B</text>
-                    <text x={bottomLeftCorner(svgProps, 'plan')[0] + width + 1} y={bottomLeftCorner(svgProps, 'plan')[1] - height / 2 + 1} fontSize={4}>L</text>
+                <svg {...SvgProps}>
+                    <Axis horizontalShift={bottomLeftCorner(SvgProps, 'plan')[0] - 3} verticalShift={bottomLeftCorner(SvgProps, 'plan')[1] + 3}/>
+                    <rect {...(foundationProps(SvgProps, false))}/>
+                    {pointLoads.map( load => <ArrowInOut horizontalShift={bottomLeftCorner(SvgProps, 'plan')[0] + load.xCoord} verticalShift={bottomLeftCorner(SvgProps, 'plan')[1] - load.yCoord} magnitude={load.kips}/>)}
+                    <text {...foundationTitle(SvgProps)}>Foundation Plan</text>
+                    <text x={bottomLeftCorner(SvgProps, 'plan')[0] + width / 2} y={bottomLeftCorner(SvgProps, 'plan')[1] + 4} textAnchor="middle" fontSize={4}>B</text>
+                    <text x={bottomLeftCorner(SvgProps, 'plan')[0] + width + 1} y={bottomLeftCorner(SvgProps, 'plan')[1] - height / 2 + 1} fontSize={4}>L</text>
                 </svg>
-                <svg {...svgProps}>
-                    <rect {...(foundationProps(svgProps, true))}/>
-                    {pointLoads.map( load => <ArrowInto horizontalShift={bottomLeftCorner(svgProps, 'planRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(svgProps, 'planRotated')[1] + load.xCoord - width}/>)}
-                    <text {...foundationTitle(svgProps)}>Foundation Plan y-y</text>
-                    <text x={bottomLeftCorner(svgProps, 'planRotated')[0] + height / 2} y={bottomLeftCorner(svgProps, 'planRotated')[1] + 4} textAnchor="middle" fontSize={4}>L</text>
-                    <text x={bottomLeftCorner(svgProps, 'planRotated')[0] + height + 1} y={bottomLeftCorner(svgProps, 'planRotated')[1] - width / 2 + 1} fontSize={4}>B</text>
+                <svg {...SvgProps}>
+                    <Axis horizontalShift={bottomLeftCorner(SvgProps, 'planRotated')[0] - 3} verticalShift={bottomLeftCorner(SvgProps, 'planRotated')[1] - 3 - width} rotate={true}/>
+                    <rect {...(foundationProps(SvgProps, true))}/>
+                    {pointLoads.map( load => <ArrowInOut horizontalShift={bottomLeftCorner(SvgProps, 'planRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(SvgProps, 'planRotated')[1] + load.xCoord - width} magnitude={load.kips}/>)}
+                    <text {...foundationTitle(SvgProps)}>Foundation Plan</text>
+                    <text x={bottomLeftCorner(SvgProps, 'planRotated')[0] + height / 2} y={bottomLeftCorner(SvgProps, 'planRotated')[1] + 4} textAnchor="middle" fontSize={4}>L</text>
+                    <text x={bottomLeftCorner(SvgProps, 'planRotated')[0] + - 4} y={bottomLeftCorner(SvgProps, 'planRotated')[1] - width / 2 + 1} fontSize={4}>B</text>
                 </svg>
             </Box>
 
             {/* foundation section and rotated section */}
             <Box display='flex' sx={{ justifyContent: 'center'}}>
-                <svg {...svgProps}>
-                    {pointLoads.map( load => <Arrow horizontalShift={bottomLeftCorner(svgProps, 'section')[0] + load.xCoord} verticalShift={bottomLeftCorner(svgProps, 'section')[1] - thickness}/>)}
-                    <rect {...(foundationProps(svgProps, false, true))}/>
-                    <text {...foundationTitle(svgProps)}>Foundation Section x-x</text>
-                    <text x={bottomLeftCorner(svgProps, 'section')[0] + width / 2} y={bottomLeftCorner(svgProps, 'section')[1] + 4} textAnchor="middle" fontSize={4}>B</text>
-                    <text x={bottomLeftCorner(svgProps, 'section')[0] + width + 1} y={bottomLeftCorner(svgProps, 'section')[1] - thickness / 2 + 1} fontSize={4}>t</text>
+                <svg {...SvgProps}>
+                    {pointLoads.map( load => <Arrow horizontalShift={bottomLeftCorner(SvgProps, 'section')[0] + load.xCoord} verticalShift={bottomLeftCorner(SvgProps, 'section')[1] - thickness} magnitude={load.kips}/>)}
+                    <rect {...(foundationProps(SvgProps, false, true))}/>
+                    <text {...foundationTitle(SvgProps)}>Foundation Section</text>
+                    <text x={bottomLeftCorner(SvgProps, 'section')[0] + width / 2} y={bottomLeftCorner(SvgProps, 'section')[1] + 4} textAnchor="middle" fontSize={4}>B</text>
+                    <text x={bottomLeftCorner(SvgProps, 'section')[0] + width + 1} y={bottomLeftCorner(SvgProps, 'section')[1] - thickness / 2 + 1} fontSize={4}>t</text>
                 </svg>
-                <svg {...svgProps}>
-                    {pointLoads.map( load => <Arrow horizontalShift={bottomLeftCorner(svgProps, 'sectionRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(svgProps, 'sectionRotated')[1] - thickness}/>)}
-                    <rect {...(foundationProps(svgProps, true, true))}/>
-                    <text {...foundationTitle(svgProps)}>Foundation Plan y-y</text>
-                    <text x={bottomLeftCorner(svgProps, 'sectionRotated')[0] + height / 2} y={bottomLeftCorner(svgProps, 'sectionRotated')[1] + 4} textAnchor="middle" fontSize={4}>L</text>
-                    <text x={bottomLeftCorner(svgProps, 'sectionRotated')[0] + height + 1} y={bottomLeftCorner(svgProps, 'sectionRotated')[1] - thickness / 2 + 1} fontSize={4}>t</text>
+                <svg {...SvgProps}>
+                    {pointLoads.map( load => <Arrow horizontalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[1] - thickness} magnitude={load.kips}/>)}
+                    <rect {...(foundationProps(SvgProps, true, true))}/>
+                    <text {...foundationTitle(SvgProps)}>Foundation Section</text>
+                    <text x={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + height / 2} y={bottomLeftCorner(SvgProps, 'sectionRotated')[1] + 4} textAnchor="middle" fontSize={4}>L</text>
+                    <text x={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + height + 1} y={bottomLeftCorner(SvgProps, 'sectionRotated')[1] - thickness / 2 + 1} fontSize={4}>t</text>
                 </svg>
             </Box>
             <Divider />
