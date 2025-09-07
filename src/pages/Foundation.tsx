@@ -5,6 +5,7 @@ import AddButton from "../components/AddButton";
 import Arrow from "../components/ArrowUpDown";
 import ArrowInOut from "../components/ArrowInOut";
 import Axis from "../components/Axis";
+import Moment from "../components/Moment";
 
 function Foundation() {
     // interfaces
@@ -75,15 +76,15 @@ function Foundation() {
     const handleRemovePointLoad: (event: React.MouseEvent<HTMLButtonElement>, id: number) => void = (e: React.MouseEvent<HTMLButtonElement>, id: number) => {
         setPointLoads(pointLoads.filter(load => load.id !== id))
     }
-    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kips' | 'x' | 'y') => void =
-        (e: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kips' | 'x' | 'y') => {
+    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kips' | 'B' | 'L') => void =
+        (e: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kips' | 'B' | 'L') => {
             const newValue = parseInt(e.target.value);
             const modifiedPointLoads: PointLoad[] = pointLoads.map( load => {
                 if(load.id === id){
                     switch(param){
                         case 'kips': return {...load, kips: newValue}
-                        case 'x': return {...load, xCoord: newValue}
-                        case 'y': return {...load, yCoord: newValue}
+                        case 'B': return {...load, xCoord: newValue}
+                        case 'L': return {...load, yCoord: newValue}
                     }
                 }
                 return load;
@@ -98,15 +99,15 @@ function Foundation() {
     const handleRemoveMomentLoad: (event: React.MouseEvent<HTMLButtonElement>, id: number) => void = (e: React.MouseEvent<HTMLButtonElement>, id: number) => {
         setMomentLoads(momentLoads.filter(load => load.id !== id))
     }
-    const handleModifyMomentLoad: (event: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kipft' | 'x' | 'y') => void =
-        (e: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kipft' | 'x' | 'y') => {
+    const handleModifyMomentLoad: (event: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kipft' | 'B' | 'L') => void =
+        (e: React.ChangeEvent<HTMLInputElement>, id: number, param: 'kipft' | 'B' | 'L') => {
             const newValue = parseInt(e.target.value);
             const modifiedMomentLoads: MomentLoad[] = momentLoads.map( load => {
                 if(load.id === id){
                     switch(param){
                         case 'kipft': return {...load, kipft: newValue}
-                        case 'x': return {...load, xCoord: newValue}
-                        case 'y': return {...load, yCoord: newValue}
+                        case 'B': return {...load, xCoord: newValue}
+                        case 'L': return {...load, yCoord: newValue}
                     }
                 }
                 return load;
@@ -118,15 +119,15 @@ function Foundation() {
     const generatePointLoadInputs: (id: number) => TextFieldProps[] = (id: number) => {
         return [
             {sx: {pr:3}, label: 'kips', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyPointLoad(e, id, 'kips')},
-            {sx: {pr:3}, label: 'x', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyPointLoad(e, id, 'x')},
-            {sx: {pr:3}, label: 'y', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyPointLoad(e, id, 'y')},
+            {sx: {pr:3}, label: 'B', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyPointLoad(e, id, 'B')},
+            {sx: {pr:3}, label: 'L', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyPointLoad(e, id, 'L')},
         ]
     }
     const generateMomentLoadInputs: (id: number) => TextFieldProps[] = (id: number) => {
         return [
             {sx: {pr:3}, label: 'kip-ft', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'kipft')},
-            {sx: {pr:3}, label: 'x', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'x')},
-            {sx: {pr:3}, label: 'y', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'y')},
+            {sx: {pr:3}, label: 'B', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'B')},
+            {sx: {pr:3}, label: 'L', defaultValue: 0, size: 'small', variant: 'standard', onChange: (e) => handleModifyMomentLoad(e, id, 'L')},
         ]
     }
     const foundationProps: (SvgProps: SvgProps, rotated?: boolean, section?: boolean) => RectProps = (SvgProps: SvgProps, rotated: boolean = false, section: boolean = false) => {
@@ -294,6 +295,7 @@ function Foundation() {
                 </svg>
                 <svg {...SvgProps}>
                     {pointLoads.map( load => <Arrow horizontalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[1] - thickness} magnitude={load.kips}/>)}
+                    {momentLoads.map( load => <Moment horizontalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + load.yCoord} verticalShift={bottomLeftCorner(SvgProps, 'sectionRotated')[1] - thickness} reverse={false}/>)}
                     <rect {...(foundationProps(SvgProps, true, true))}/>
                     <text {...foundationTitle(SvgProps)}>Foundation Section</text>
                     <text x={bottomLeftCorner(SvgProps, 'sectionRotated')[0] + height / 2} y={bottomLeftCorner(SvgProps, 'sectionRotated')[1] + 4} textAnchor="middle" fontSize={4}>L</text>
