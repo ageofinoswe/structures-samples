@@ -9,7 +9,7 @@ interface ButtonProps {
 function RemoveButton({id, onClick} : ButtonProps) {
     return(
         <>
-            <IconButton sx={{ p: 0, m: 0, alignItems: 'flex-end' }} onClick={ (e) => onClick(e, id)}>
+            <IconButton sx={{ p: 0, m: 0, alignItems: 'flex-end' }} onClick={event => onClick(event, id)}>
                 <RemoveCircleOutlineIcon sx={{ color: 'red' }}/>
             </IconButton>
         </>
