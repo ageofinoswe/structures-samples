@@ -69,10 +69,8 @@ function Foundation() {
     const [fdnWidth, setFdnWidth] = React.useState(0);
     const [fdnHeight, setFdnHeight] = React.useState(0);
     const [fdnThickness, setFdnThickness] = React.useState(0);
-    const [pointLoads, setPointLoads] = React.useState<PointLoad[]>([]);
-    const [pointLoadID, setPointLoadID] = React.useState(0);
-    const [moments, setMoments] = React.useState<Moment[]>([]);
-    const [momentID, setMomentID] = React.useState(0);
+    const [pointLoads, setPointLoads] = React.useState<PointLoad[]>([{id: 0, kips: 0, coordB: 0, coordL: 0}]);
+    const [moments, setMoments] = React.useState<Moment[]>([{id: 0, along: 'B', kipft: 0, coordB: 0, coordL: 0}]);
 
     // foundation handlers
     const handleFdnWidthChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
@@ -86,20 +84,6 @@ function Foundation() {
     }
 
     // point load handlers
-    const handleAddPointLoad: () => void = () => {
-        const newPointLoad: PointLoad = {
-            id: pointLoadID,
-            kips: 0,
-            coordB: 0,
-            coordL: 0,
-        };
-        setPointLoads([...pointLoads, newPointLoad]);
-        setPointLoadID(pointLoadID + 1);
-    }
-    const handleRemovePointLoad: (id: number) => void = (id) => {
-        const modifiedPointLoads: PointLoad[]= pointLoads.filter(pointLoad => pointLoad.id !== id);
-        setPointLoads(modifiedPointLoads);
-    }
     const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: number, field: PointLoadFields) => void = (event, id, field) => {
         const newValue: number = parseInt(event.target.value);
         const modifiedPointLoads: PointLoad[] = pointLoads.map(pointLoad => {
@@ -116,21 +100,6 @@ function Foundation() {
     }
 
     // moment handlers
-    const handleAddMoment: () => void = () => {
-        const newMoment: Moment = {
-            id: momentID,
-            along: 'B',
-            kipft: 0,
-            coordB: 0,
-            coordL: 0,
-        }
-        setMoments([...moments, newMoment])
-        setMomentID(momentID + 1);
-    }
-    const handleRemoveMoment: (id: number) => void = (id) => {
-        const modifiedMoments: Moment[]= moments.filter(moment => moment.id !== id);
-        setMoments(modifiedMoments);
-    }
     const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: number, field: MomentFields) => void = (event, id, field) => {
         const newValue: number = parseInt(event.target.value);
         const modifiedMoments: Moment[] = moments.map(moment => {
@@ -266,10 +235,8 @@ function Foundation() {
                                         variant='standard'
                                         onChange={event => handleModifyPointLoad(event, pointLoad.id, field)}/>
                                 )}
-                                <RemoveButton id={pointLoad.id} onClick={()=>handleRemovePointLoad(pointLoad.id)}></RemoveButton>
                             </Box>
                         )}
-                        <AddButton onClick={handleAddPointLoad}></AddButton>
                     </Stack>
                 </Grid>
 
@@ -297,10 +264,8 @@ function Foundation() {
                                         variant='standard'
                                         onChange={event => handleModifyMoment(event, moment.id, field)}/>
                                 )}
-                                <RemoveButton id={moment.id} onClick={() => handleRemoveMoment(moment.id)}></RemoveButton>
                             </Box>
                         )}
-                        <AddButton onClick={handleAddMoment}></AddButton>
                     </Stack>
                 </Grid>
             </Grid>
