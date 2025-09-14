@@ -10,10 +10,10 @@ function Arrow({x, y, magnitude}: ArrowProps) {
     const arrowProps = {
         fill: 'none',
         stroke: 'black',
-        'stroke-width': 0.3,
+        'stroke-width': 0.2,
     };
 
-    const arrowLength = 10;
+    const arrowLength = 5;
     const arrowLine = {
         x1: x,
         y1: y,
@@ -21,7 +21,7 @@ function Arrow({x, y, magnitude}: ArrowProps) {
         y2: y - arrowLength,
     }
 
-    const arrowHeadLength = 1;
+    const arrowHeadLength = .75;
     const arrowHeadDown =   `M ${x},${y}
                             L ${x - arrowHeadLength},${y - arrowHeadLength}
                             M ${x},${y}

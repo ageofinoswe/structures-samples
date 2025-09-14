@@ -2,11 +2,11 @@ interface MomentProps {
     x: number,
     y: number,
     magnitude: number,
-    along?: 'B' | 'L',
+    along?: string,
     rotate?: boolean,
 }
 
-function Moment({x, y, magnitude, along, rotate=false} : MomentProps) {
+function MomentPlan({x, y, magnitude, along, rotate=false} : MomentProps) {
     interface lineProps {
         x1: number,
         y1: number,
@@ -17,12 +17,12 @@ function Moment({x, y, magnitude, along, rotate=false} : MomentProps) {
     const drawingProps = {
         fill: 'none',
         stroke: 'blue',
-        'stroke-width': 0.3,
+        'stroke-width': 0.2,
     };
 
     const direction = magnitude >= 0 ? 'clockwise' : 'counterclockwise'
-    const radius = 3;
-    const arrowHeadLength = 0.75;
+    const radius = 2;
+    const arrowHeadLength = 0.4;
     const arrowHeadOffset = 1;
 
     const momentArrow: lineProps[]= [
@@ -111,4 +111,4 @@ function Moment({x, y, magnitude, along, rotate=false} : MomentProps) {
     )
 }
 
-export default Moment
+export default MomentPlan

@@ -10,15 +10,15 @@ function ArrowInOut({x, y, magnitude}: ArrowProps) {
     const arrowProps = {
         fill: 'none',
         stroke: 'black',
-        'stroke-width': 0.3,
+        'stroke-width': 0.2,
     };
     const arrowOutProps = {
         cx: x,
         cy: y,
-        r: 1
+        r: 0.75
     };
     
-    const offset = 0.75;
+    const offset = 0.5;
     const arrowInProps =   `M ${x},${y}
                             L ${x - offset},${y - offset} ${x + offset},${y + offset}
                             M ${x},${y}

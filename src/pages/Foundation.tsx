@@ -1,20 +1,16 @@
 import { Box, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Stack, TextField, Typography } from "@mui/material"
 import React from "react";
-import RemoveButton from "../components/RemoveButton";
-import AddButton from "../components/AddButton";
 import ArrowInOut from "../components/ArrowInOut";
 import OriginAxis from "../components/OriginAxis";
 import ArrowUpDown from "../components/ArrowUpDown";
 import MomentSection from "../components/MomentSection";
 import MomentPlan from "../components/MomentPlan";
-
-
-
+import CalculationLine from "../components/CalculationLine";
+import CalculationHeader from "../components/CalculationHeader";
 
 function Foundation() {
     // types and const declarations
     type FoundationOrientations = 'plan' | 'planRotated' | 'section' | 'sectionRotated';
-    type MomentAlongAxis = 'B' | 'L';
     type MomentFields = 'kipft' | 'B' | 'L';
     type PointLoadFields = 'kips' | 'B' | 'L';
     const momentTextInputFields: MomentFields[] = ['kipft', 'B', 'L'];
@@ -52,14 +48,12 @@ function Foundation() {
         dominantBaseline?: string,
     }
     interface PointLoad {
-        id: number,
         kips: number,
         coordB: number,
         coordL: number,
     }
     interface Moment {
-        id: number,
-        along: MomentAlongAxis,
+        along: string,
         kipft: number,
         coordB: number,
         coordL: number,
@@ -69,58 +63,72 @@ function Foundation() {
     const [fdnWidth, setFdnWidth] = React.useState(0);
     const [fdnHeight, setFdnHeight] = React.useState(0);
     const [fdnThickness, setFdnThickness] = React.useState(0);
-    const [pointLoads, setPointLoads] = React.useState<PointLoad[]>([{id: 0, kips: 0, coordB: 0, coordL: 0}]);
-    const [moments, setMoments] = React.useState<Moment[]>([{id: 0, along: 'B', kipft: 0, coordB: 0, coordL: 0}]);
+    const [fdnDensity, setFdnDensity] = React.useState(0.145);
+    const [fdnCenter, setFdnCenter] = React.useState([0,0]);
+    const [pointLoad, setPointLoad] = React.useState<PointLoad>({kips: 0, coordB: 0, coordL: 0});
+    const [moment, setMoment] = React.useState<Moment>({along: 'B', kipft: 0, coordB: 0, coordL: 0});
+    const [eccentricityDirection, setEccentricityDirection] = React.useState('B');
 
     // foundation handlers
     const handleFdnWidthChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnWidth(parseInt(event.target.value));
+        centerLoads(parseInt(event.target.value), fdnHeight);
     }
     const handleFdnHeightChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnHeight(parseInt(event.target.value));
+        centerLoads(fdnWidth, parseInt(event.target.value));
     }
     const handleFdnThicknessChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setFdnThickness(parseInt(event.target.value) / 12);
+        setFdnThickness(parseInt(event.target.value));
+    }
+    const centerLoads: (width: number, height: number) => void = (width, height) => {
+        const centeredPointLoad: PointLoad = {...pointLoad, coordB: width / 2, coordL: height / 2};
+        const centeredMoment: Moment = {...moment, coordB: width / 2, coordL: height / 2}; 
+        setPointLoad(centeredPointLoad);
+        setMoment(centeredMoment);
+        setFdnCenter([width / 2, height / 2]);
     }
 
     // point load handlers
-    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: number, field: PointLoadFields) => void = (event, id, field) => {
-        const newValue: number = parseInt(event.target.value);
-        const modifiedPointLoads: PointLoad[] = pointLoads.map(pointLoad => {
-            if(pointLoad.id === id){
-                return{...pointLoad,
-                    kips: field === 'kips' ? newValue : pointLoad.kips,
-                    coordB: field === 'B' ? newValue : pointLoad.coordB,
-                    coordL: field === 'L' ? newValue : pointLoad.coordL,
-                }
-            }
-            return pointLoad;
-        })
-        setPointLoads(modifiedPointLoads);
+    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: PointLoadFields) => void = (event, field) => {
+        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
+        const modifiedPointLoads: PointLoad = 
+            {...pointLoad,
+                kips: field === 'kips' ? newValue : pointLoad.kips,
+                coordB: field === 'B' ? newValue + fdnCenter[0] : pointLoad.coordB,
+                coordL: field === 'L' ? newValue + fdnCenter[1] : pointLoad.coordL,
+            };
+        setPointLoad(modifiedPointLoads);
     }
 
     // moment handlers
-    const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: number, field: MomentFields) => void = (event, id, field) => {
-        const newValue: number = parseInt(event.target.value);
-        const modifiedMoments: Moment[] = moments.map(moment => {
-            if(moment.id === id){
-                return{...moment,
+    const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: MomentFields) => void = (event, field) => {
+        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
+        const modifiedMoments: Moment =
+                {...moment,
                     kipft: field === 'kipft' ? newValue : moment.kipft,
-                    coordB: field === 'B' ? newValue : moment.coordB,
-                    coordL: field === 'L' ? newValue : moment.coordL,
-                }
-            }
-            return moment;
-        })
-        setMoments(modifiedMoments);
+                    coordB: field === 'B' ? newValue + fdnCenter[0] : moment.coordB,
+                    coordL: field === 'L' ? newValue + fdnCenter[1] : moment.coordL,
+                };
+        setMoment(modifiedMoments);
     }
-    const handleModifyMomentAlong: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id: number) => void = (event, id) => {
-        const modifiedMoments: Moment[] = moments.map(moment => {
-            return{...moment,
-                along: (moment.id === id ? event.target.value as MomentAlongAxis : moment.along)
-            }
-        })
-        setMoments(modifiedMoments);
+    const handleModifyMomentAlong: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
+        const modifiedMoments: Moment =
+            {...moment,
+                along: event.target.value
+            };
+        setMoment(modifiedMoments);
+    }
+    const handleEccentricityDirection: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
+        if(event.target.value === 'B'){
+            setPointLoad({...pointLoad, coordL: fdnCenter[1]})
+            setMoment({...moment, coordL: fdnCenter[1]})
+        }
+        else{
+            setPointLoad({...pointLoad, coordB: fdnCenter[0]})
+            setMoment({...moment, coordB: fdnCenter[0]})
+        }
+        setEccentricityDirection(event.target.value);
     }
 
     // foundation properties
@@ -130,7 +138,7 @@ function Foundation() {
         const viewBoxHeight: number = viewBox[3];
 
         const rectWidth: number = (type === 'plan' || type === 'section') ? fdnWidth : fdnHeight;
-        const rectHeight: number = (type === 'plan') ? fdnHeight : (type === 'planRotated') ? fdnWidth : fdnThickness;
+        const rectHeight: number = (type === 'plan') ? fdnHeight : (type === 'planRotated') ? fdnWidth : fdnThickness / 12;
         const coordX: number = ((viewBoxWidth - rectWidth) / 2);
         const coordY: number = ((viewBoxHeight - rectHeight) / 2);
 
@@ -199,6 +207,58 @@ function Foundation() {
     const labelLocationsSection = getLabelLocations(SvgProps, foundationProps(SvgProps, 'section'))
     const labelLocationsSectionRotated = getLabelLocations(SvgProps, foundationProps(SvgProps, 'sectionRotated'))
 
+    const calcProps = {
+        sx: {mt: 1,
+            fontWeight: 'bold',
+            textDecoration:'underline',
+            fontStyle:'italic'
+        }
+    }
+
+    const calculations = {
+        foundation: {
+            width: fdnWidth,
+            height: fdnHeight,
+            thickness: fdnThickness,
+            area: fdnWidth * fdnHeight,
+            density: fdnDensity,
+            weight: fdnWidth * fdnHeight * fdnThickness / 12 * fdnDensity,
+            sbb: fdnHeight * fdnWidth * fdnWidth / 6,
+            sll: fdnWidth * fdnHeight * fdnHeight / 6
+        },
+        pointLoad: {
+            magnitude: pointLoad.kips,
+            eB: pointLoad.coordB - fdnCenter[0],
+            eL: pointLoad.coordL - fdnCenter[1],
+            mB: pointLoad.kips * (pointLoad.coordB - fdnCenter[0]),
+            mL: pointLoad.kips * (pointLoad.coordL - fdnCenter[1]),
+            along: eccentricityDirection === 'B' ? 'B-B' : 'L-L',
+        },
+        moment: {
+            mB: eccentricityDirection === 'B' ? moment.kipft : 0,
+            mL: eccentricityDirection === 'L' ? moment.kipft : 0,
+            eB: moment.coordB - fdnCenter[0],
+            eL: moment.coordL - fdnCenter[1],
+            along: eccentricityDirection === 'B' ? 'B-B' : 'L-L',
+        },
+    }
+    const calculationsPressures = {
+        bbTrpz: {
+            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb,
+            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb
+        },
+        llTrpz: {
+            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll,
+            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll
+        },
+        sumP: calculations.foundation.weight + calculations.pointLoad.magnitude,
+        sumMbb: calculations.pointLoad.mB + calculations.moment.mB,
+        sumMll: calculations.pointLoad.mL + calculations.moment.mL,
+        beff: eccentricityDirection === 'L' ? calculations.foundation.width : 3*(calculations.foundation.width/2 - (calculations.pointLoad.mB + calculations.moment.mB)/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
+        leff: eccentricityDirection === 'B' ? calculations.foundation.height : 3*(calculations.foundation.height/2 - (calculations.pointLoad.mL + calculations.moment.mL)/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
+
+    }
+  
     return (
         <>  
             {/* title*/}
@@ -209,10 +269,10 @@ function Foundation() {
             <Divider />
 
             {/* GRID: dimensions, point loads, moments*/}
-            <Grid container sx={{ mt: '1em' }} spacing={20}>
+            <Grid container sx={{ py: 1 }} spacing={20}>
                 {/* dimensions */}
                 <Grid size={3}>
-                    <Stack sx={{ py: 1 }}>          
+                    <Stack>          
                         <Typography variant='subtitle1'>Dimensions</Typography>
                         {dimensionInput.map(textInputProps => 
                             <TextField {...textInputProps}/>
@@ -222,50 +282,57 @@ function Foundation() {
 
                 {/* point loads */}
                 <Grid size={4}>
-                    <Stack sx={{ alignItems: 'flex-start', py: 1 }}>          
+                    <Stack>
+                        <FormControl sx={{mb: 1}}>
+                            <Typography>
+                                Eccentricity Along?
+                            </Typography>
+                                <RadioGroup row value={eccentricityDirection} onChange={event => handleEccentricityDirection(event)}>
+                                    <FormControlLabel value={'B'} control={<Radio size='small' />} label="B" />
+                                    <FormControlLabel value={'L'} control={<Radio size='small' />} label="L" />
+                                </RadioGroup>
+                            </FormControl>         
                         <Typography variant='subtitle1'>Point Loads</Typography>
-                        {pointLoads.map(pointLoad =>
-                            <Box key={pointLoad.id} display='flex'>
+                            <Box display='flex'>
                                 {pointLoadTextInputFields.map(field => 
                                     <TextField
+                                        disabled={field !== 'kips' && eccentricityDirection !== field}
                                         sx={{pr:3}}
                                         label={field}
-                                        defaultValue={0}
+                                        value={field === 'kips' ? pointLoad.kips : field === 'B' ? pointLoad.coordB - fdnCenter[0] : pointLoad.coordL - fdnCenter[1]}
                                         size='small'
                                         variant='standard'
-                                        onChange={event => handleModifyPointLoad(event, pointLoad.id, field)}/>
+                                        onChange={event => handleModifyPointLoad(event, field)}/>
                                 )}
                             </Box>
-                        )}
                     </Stack>
                 </Grid>
 
                 {/* moments */}
                 <Grid size={5}>
-                    <Stack sx={{ alignItems: 'flex-start', py: 1 }}>          
-                        <Typography variant='subtitle1'>Moments</Typography>
-                        {moments.map(moment =>
-                            <Box alignItems='center' key={moment.id} display='flex'>
-                                <FormControl sx={{mr: 4}}>
-                                    <FormLabel>
-                                        Along?
-                                    </FormLabel>
-                                    <RadioGroup value={moment.along} onChange={event => handleModifyMomentAlong(event, moment.id)}>
-                                        <FormControlLabel value={'B'} control={<Radio size='small' />} label="B" />
-                                        <FormControlLabel value={'L'} control={<Radio size='small' />} label="L" />
-                                    </RadioGroup>
-                                </FormControl>
+                    <Stack>
+                        <FormControl disabled={true} sx={{mb: 1}}>
+                            <FormLabel>
+                                Along
+                            </FormLabel>
+                            <RadioGroup row value={eccentricityDirection} onChange={event => handleModifyMomentAlong(event)}>
+                                <FormControlLabel value={'B'} control={<Radio size='small' />} label="B" />
+                                <FormControlLabel value={'L'} control={<Radio size='small' />} label="L" />
+                            </RadioGroup>
+                        </FormControl>          
+                        <Typography variant='subtitle1'>Moment</Typography>
+                            <Box alignItems='center' display='flex'>
                                 {momentTextInputFields.map(field =>
                                     <TextField
+                                        disabled={field !== 'kipft' && eccentricityDirection !== field}
                                         sx={{pr:3}}
                                         label={field}
-                                        defaultValue={0}
+                                        value={field === 'kipft' ? moment.kipft : field === 'B' ? moment.coordB - fdnCenter[0] : moment.coordL - fdnCenter[1]}
                                         size='small'
                                         variant='standard'
-                                        onChange={event => handleModifyMoment(event, moment.id, field)}/>
+                                        onChange={event => handleModifyMoment(event, field)}/>
                                 )}
                             </Box>
-                        )}
                     </Stack>
                 </Grid>
             </Grid>
@@ -282,12 +349,8 @@ function Foundation() {
                     <text {...labelLocationsPlan.bottom}>B</text>
                     <text {...labelLocationsPlan.perp}>L</text>
                     <text {...labelLocationsPlan.title}>Foundation Plan</text>
-                    {pointLoads.map(pointLoad =>
-                        <ArrowInOut x={planOrigin[0] + pointLoad.coordB} y={planOrigin[1] - pointLoad.coordL} magnitude={pointLoad.kips}/>
-                    )}
-                    {moments.map(moment =>
-                        <MomentPlan x={planOrigin[0] + moment.coordB} y={planOrigin[1] - moment.coordL} magnitude={moment.kipft} along={moment.along}/>
-                    )}
+                    <ArrowInOut x={planOrigin[0] + pointLoad.coordB} y={planOrigin[1] - pointLoad.coordL} magnitude={pointLoad.kips}/>
+                    <MomentPlan x={planOrigin[0] + moment.coordB} y={planOrigin[1] - moment.coordL} magnitude={moment.kipft} along={eccentricityDirection}/>
                 </svg>
                 <svg {...SvgProps}>
                     <rect {...(foundationProps(SvgProps, 'planRotated'))}/>
@@ -295,12 +358,8 @@ function Foundation() {
                     <text {...labelLocationsPlanRotated.bottom}>L</text>
                     <text {...labelLocationsPlanRotated.perp}>B</text>
                     <text {...labelLocationsPlanRotated.title}>Foundation Plan</text>
-                    {pointLoads.map(pointLoad =>
-                        <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL} y={planRotatedOrigin[1] + pointLoad.coordB} magnitude={pointLoad.kips}/>
-                    )}
-                    {moments.map(moment =>
-                        <MomentPlan x={planRotatedOrigin[0] + moment.coordL} y={planRotatedOrigin[1] + moment.coordB} magnitude={moment.kipft} along={moment.along} rotate={true}/>
-                    )}
+                    <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL} y={planRotatedOrigin[1] + pointLoad.coordB} magnitude={pointLoad.kips}/>
+                    <MomentPlan x={planRotatedOrigin[0] + moment.coordL} y={planRotatedOrigin[1] + moment.coordB} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
                 </svg>
             </Box>
 
@@ -311,29 +370,109 @@ function Foundation() {
                     <text {...labelLocationsSection.bottom}>B</text>
                     <text {...labelLocationsSection.perp}>t</text>
                     <text {...labelLocationsSection.title}>Foundation Section</text>
-                    {pointLoads.map(pointLoad =>
-                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    )}
-                    {moments.map(moment =>
-                        moment.along === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>
-                    )}
+                    <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                    {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
                 </svg>
                 <svg {...SvgProps}>
                      <rect {...(foundationProps(SvgProps, 'sectionRotated'))}/>
                     <text {...labelLocationsSectionRotated.bottom}>L</text>
                     <text {...labelLocationsSectionRotated.perp}>t</text>
                     <text {...labelLocationsSectionRotated.title}>Foundation Section</text>
-                    {pointLoads.map(pointLoad =>
-                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    )}
-                    {moments.map(moment =>
-                        moment.along === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>
-                    )}
+                    <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                    {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
                 </svg>
             </Box>
+
             <Divider sx={{mt: 3}} />
+            
             <Box>
-                <Typography variant='h3' align='left' sx={{ mt: 2, fontSize: '2em' }}>Calculations</Typography>
+                <Typography variant='h3' align='left' sx={{ my: 2, fontSize: '2em' }}>Calculations</Typography>
+            </Box>
+
+            <Typography {...calcProps}>Foundation Properties</Typography>
+            <Grid container>
+                <CalculationHeader/>
+                <CalculationLine name="width" variable="B" value={calculations.foundation.width} units='ft'/>
+                <CalculationLine name="length" variable="L" value={calculations.foundation.height} units='ft'/>
+                <CalculationLine name="thickness" variable="t" value={calculations.foundation.thickness} units='in'/>
+                <CalculationLine name="density" variable={'\u03B3'} value={calculations.foundation.density} units='kcf'/>
+                <CalculationLine name="weight" variable="w" value={calculations.foundation.weight} units='kips' formula={`B * L * t * ${'\u03B3'}`}/>
+            </Grid>
+
+            <Typography {...calcProps}>Applied Point Load</Typography>
+            <Grid container>
+                <CalculationHeader/>
+                <CalculationLine name="point load" variable="P" value={calculations.pointLoad.magnitude} units='kips'/>
+                <CalculationLine name="eccentricity b" variable="Ep_b" value={calculations.pointLoad.eB} units='ft'/>
+                <CalculationLine name="eccentricity l" variable="Ep_l" value={calculations.pointLoad.eL} units='ft'/>
+                <CalculationLine name="eccentric moment b" variable="EMp_b" value={calculations.pointLoad.mB} units='kip-ft' formula='P * Ep_b'/>
+                <CalculationLine name="eccentric moment l" variable="EMp_l" value={calculations.pointLoad.mL} units='kip-ft' formula='P * Ep_l'/>
+            </Grid>
+
+            <Typography {...calcProps}>Applied Moment</Typography>
+            <Grid container>
+                <CalculationHeader/>
+                <CalculationLine name="moment" variable="M_b" value={calculations.moment.mB} units='kip-ft'/>
+                <CalculationLine name="moment" variable="M_l" value={calculations.moment.mL} units='kip-ft'/>
+                <CalculationLine name="along" variable={calculations.moment.along} value={'-'} units='-'/>
+                <CalculationLine name="eccentricity b" variable="Em_b" value={calculations.moment.eB} units='ft'/>
+                <CalculationLine name="eccentricity l" variable="Em_l" value={calculations.moment.eL} units='ft'/>
+            </Grid>
+
+            <Typography {...calcProps}>Summations / Totals</Typography>
+            <Grid container>
+                <CalculationHeader/>
+                <CalculationLine name="vertical load" variable="Pt" value={calculationsPressures.sumP} units='kips' formula='w + P'/>
+                <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsPressures.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
+                <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsPressures.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
+            </Grid>
+
+            <Typography {...calcProps}>Soil Bearing Pressures</Typography>
+            <Grid container>
+                <CalculationHeader/>
+                <CalculationLine name="sum vertical load" variable="Pt" value={calculationsPressures.sumP} units='kips' formula='w + P'/>
+                <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft2' formula='B * L'/>
+                <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsPressures.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
+                <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsPressures.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
+                <CalculationLine name="section modulus BB" variable="Sbb" value={calculations.foundation.sbb} units='ft3' formula='L * B^2 / 6'/>
+                <CalculationLine name="section modulus LL" variable="Sll" value={calculations.foundation.sll} units='ft3' formula='L^2 * B / 6'/>
+                <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsPressures.sumP) / calculations.foundation.area} units='ksf' formula='Pt / A'/>
+                <CalculationLine name="moment stress BB" variable="q_bb" value={(calculationsPressures.sumMbb) / calculations.foundation.sbb} units='ksf' formula='Mt_bb / Sbb'/>
+                <CalculationLine name="moment stress LL" variable="q_ll" value={(calculationsPressures.sumMll) / calculations.foundation.sll} units='ksf' formula='Mt_ll / Sll'/>
+                <CalculationLine name="q max BB" variable="qbb_max" value={calculationsPressures.bbTrpz.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection=='B'} error={{msg: calculationsPressures.bbTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
+                <CalculationLine name="q min BB" variable="qbb_min" value={calculationsPressures.bbTrpz.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection=='B'} error={{msg: calculationsPressures.bbTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
+                <CalculationLine name="q max LL" variable="qll_max" value={calculationsPressures.llTrpz.qmax} units='ksf' formula='Pt/A + (Mt_ll / Sll)' highlight={eccentricityDirection=='L'} error={{msg: calculationsPressures.llTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
+                <CalculationLine name="q min LL" variable="qll_min" value={calculationsPressures.llTrpz.qmin} units='ksf' formula='Pt/A - (Mt_ll / Sll)' highlight={eccentricityDirection=='L'} error={{msg: calculationsPressures.llTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
+                {(calculationsPressures.bbTrpz.qmin < 0 || calculationsPressures.llTrpz.qmin < 0) &&
+                    <>
+                        <Grid size={12}>
+                            <Typography>...</Typography>
+                        </Grid>
+                        <CalculationLine name="effective width" variable="Beff" value={calculationsPressures.beff} units='ft' formula='3 * (B / 2 - Mt_bb / Pt)'/>
+                        <CalculationLine name="effective length" variable="Leff" value={calculationsPressures.leff} units='ft' formula='3 * (L / 2 - Mt_ll / Pt)'/>
+                        <CalculationLine name="q max BB" variable="qbb_max" value={2*calculationsPressures.sumP / (calculations.foundation.height * calculationsPressures.beff)} units='ksf' formula='(2 * Pt) / (L * Beff)' highlight={eccentricityDirection=='B'}/>
+                        <CalculationLine name="q min BB" variable="qbb_min" value={0} units='ksf' highlight={eccentricityDirection=='B'}/>
+                        <CalculationLine name="q max LL" variable="qll_max" value={2*calculationsPressures.sumP / (calculations.foundation.width * calculationsPressures.leff)} units='ksf' formula='(2 * Pt) / (B * Leff)' highlight={eccentricityDirection=='L'}/>
+                        <CalculationLine name="q min LL" variable="qll_min" value={0} units='ksf' highlight={eccentricityDirection=='L'}/>
+                    </>
+                }
+            </Grid>
+            <Typography {...calcProps}>Resulting Soil Bearing Pressures</Typography>
+            <Box display='flex' sx={{ justifyContent: 'center'}}>
+                <svg {...SvgProps}>
+                    <rect {...(foundationProps(SvgProps, 'section'))}/>
+                    <text {...labelLocationsSection.bottom}>B</text>
+                    <text {...labelLocationsSection.perp}>t</text>
+                    <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                    {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
+                </svg>
+                <svg {...SvgProps}>
+                    <rect {...(foundationProps(SvgProps, 'sectionRotated'))}/>
+                    <text {...labelLocationsSectionRotated.bottom}>L</text>
+                    <text {...labelLocationsSectionRotated.perp}>t</text>
+                    <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                    {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                </svg>
             </Box>
         </>
     );
