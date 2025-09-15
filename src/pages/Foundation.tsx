@@ -7,6 +7,9 @@ import MomentSection from "../components/MomentSection";
 import MomentPlan from "../components/MomentPlan";
 import CalculationLine from "../components/CalculationLine";
 import CalculationHeader from "../components/CalculationHeader";
+import SoilBearingPressure from "../components/SoilBearingPressure";
+import CenterAxis from "../components/CenterAxis";
+import Grade from "../components/Grade";
 
 function Foundation() {
     // types and const declarations
@@ -186,7 +189,7 @@ function Foundation() {
         const bottom: SvgTextProps = {x: bottomX, y: bottomY + offsetY, fontSize: fontSize, textAnchor: textAnchor};
 
         const perpX: number = fdnProps.x + fdnProps.width;
-        const perpY: number = fdnProps.y + fdnProps.height / 2;
+        const perpY: number = fdnProps.y + fdnProps.height / 2 + 0.45;
         const perp: SvgTextProps = {x: perpX + offsetX, y: perpY, fontSize: fontSize, dominantBaseline: dominantBaseline, textAnchor: textAnchor};
 
         const viewBox: number[] = svgProps.viewBox.split(' ').map(value => parseInt(value))
@@ -202,10 +205,14 @@ function Foundation() {
     const planRotatedOrigin = getOrigin(SvgProps, 'planRotated');
     const sectionOrigin = getOrigin(SvgProps, 'section');
     const sectionRotatedOrigin = getOrigin(SvgProps, 'sectionRotated');
-    const labelLocationsPlan = getLabelLocations(SvgProps, foundationProps(SvgProps, 'plan'))
-    const labelLocationsPlanRotated = getLabelLocations(SvgProps, foundationProps(SvgProps, 'planRotated'))
-    const labelLocationsSection = getLabelLocations(SvgProps, foundationProps(SvgProps, 'section'))
-    const labelLocationsSectionRotated = getLabelLocations(SvgProps, foundationProps(SvgProps, 'sectionRotated'))
+    const foundationPropsPlan = foundationProps(SvgProps, 'plan');
+    const foundationPropsPlanRotated = foundationProps(SvgProps, 'planRotated');
+    const foundationPropsSection = foundationProps(SvgProps, 'section');
+    const foundationPropsSectionRotated = foundationProps(SvgProps, 'sectionRotated');
+    const labelLocationsPlan = getLabelLocations(SvgProps, foundationPropsPlan)
+    const labelLocationsPlanRotated = getLabelLocations(SvgProps, foundationPropsPlanRotated)
+    const labelLocationsSection = getLabelLocations(SvgProps, foundationPropsSection)
+    const labelLocationsSectionRotated = getLabelLocations(SvgProps, foundationPropsSectionRotated)
 
     const calcProps = {
         sx: {mt: 1,
@@ -242,23 +249,30 @@ function Foundation() {
             along: eccentricityDirection === 'B' ? 'B-B' : 'L-L',
         },
     }
-    const calculationsPressures = {
-        bbTrpz: {
-            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb,
-            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb
-        },
-        llTrpz: {
-            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll,
-            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll
-        },
+    const calculationsSums = {
         sumP: calculations.foundation.weight + calculations.pointLoad.magnitude,
         sumMbb: calculations.pointLoad.mB + calculations.moment.mB,
         sumMll: calculations.pointLoad.mL + calculations.moment.mL,
-        beff: eccentricityDirection === 'L' ? calculations.foundation.width : 3*(calculations.foundation.width/2 - (calculations.pointLoad.mB + calculations.moment.mB)/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
-        leff: eccentricityDirection === 'B' ? calculations.foundation.height : 3*(calculations.foundation.height/2 - (calculations.pointLoad.mL + calculations.moment.mL)/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
-
     }
-  
+    const calculationsPressuresTrapezoid = {
+        bb: {
+            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb,
+            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mB + calculations.moment.mB) / calculations.foundation.sbb
+        },
+        ll: {
+            qmax: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area + (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll,
+            qmin: (calculations.foundation.weight + calculations.pointLoad.magnitude) / calculations.foundation.area - (calculations.pointLoad.mL + calculations.moment.mL) / calculations.foundation.sll
+        },
+        beff: eccentricityDirection === 'L' ? calculations.foundation.width : 3*(calculations.foundation.width/2 - (Math.abs(calculations.pointLoad.mB + calculations.moment.mB))/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
+        leff: eccentricityDirection === 'B' ? calculations.foundation.height : 3*(calculations.foundation.height/2 - (Math.abs(calculations.pointLoad.mL + calculations.moment.mL))/(calculations.foundation.weight + calculations.pointLoad.magnitude)),
+    }
+    const calculationsPressuresTriangular = {
+        qmaxBB: 2*calculationsSums.sumP / (calculations.foundation.height * calculationsPressuresTrapezoid.beff),
+        qminBB: 0,
+        qmaxLL: 2*calculationsSums.sumP / (calculations.foundation.width * calculationsPressuresTrapezoid.leff),
+        qminLL: 0,
+    }
+
     return (
         <>  
             {/* title*/}
@@ -337,143 +351,186 @@ function Foundation() {
                 </Grid>
             </Grid>
 
-            {/* foundation plan and rotated plan*/}
-            <Divider />
-            <Box>
-                <Typography variant='h2' align='center' sx={{ mt: 2,fontSize: '2em' }}>Foundation and Applied Loads</Typography>
-            </Box>
-            <Box display='flex' sx={{ justifyContent: 'center'}}>
-                <svg {...SvgProps}>
-                    <rect {...(foundationProps(SvgProps, 'plan'))}/>
-                    <OriginAxis origin={planOrigin}></OriginAxis>
-                    <text {...labelLocationsPlan.bottom}>B</text>
-                    <text {...labelLocationsPlan.perp}>L</text>
-                    <text {...labelLocationsPlan.title}>Foundation Plan</text>
-                    <ArrowInOut x={planOrigin[0] + pointLoad.coordB} y={planOrigin[1] - pointLoad.coordL} magnitude={pointLoad.kips}/>
-                    <MomentPlan x={planOrigin[0] + moment.coordB} y={planOrigin[1] - moment.coordL} magnitude={moment.kipft} along={eccentricityDirection}/>
-                </svg>
-                <svg {...SvgProps}>
-                    <rect {...(foundationProps(SvgProps, 'planRotated'))}/>
-                    <OriginAxis origin={planRotatedOrigin} rotate={true}></OriginAxis>
-                    <text {...labelLocationsPlanRotated.bottom}>L</text>
-                    <text {...labelLocationsPlanRotated.perp}>B</text>
-                    <text {...labelLocationsPlanRotated.title}>Foundation Plan</text>
-                    <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL} y={planRotatedOrigin[1] + pointLoad.coordB} magnitude={pointLoad.kips}/>
-                    <MomentPlan x={planRotatedOrigin[0] + moment.coordL} y={planRotatedOrigin[1] + moment.coordB} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
-                </svg>
-            </Box>
+            {!isNaN(fdnWidth) && fdnWidth > 0 && !isNaN(fdnHeight) && fdnHeight > 0 && !isNaN(fdnThickness) && fdnThickness > 0
+            &&
+            <>
+                {/* foundation plan and rotated plan*/}
+                <Divider />
+                <Box>
+                    <Typography variant='h2' align='center' sx={{ mt: 2,fontSize: '2em' }}>Foundation and Applied Loads</Typography>
+                </Box>
+                <Box display='flex' sx={{ justifyContent: 'center'}}>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsPlan)}/>
+                        <CenterAxis foundationProps={foundationPropsPlan}></CenterAxis>
+                        <OriginAxis origin={planOrigin}></OriginAxis>
+                        <text {...labelLocationsPlan.bottom}>B</text>
+                        <text {...labelLocationsPlan.perp}>L</text>
+                        <text {...labelLocationsPlan.title}>Foundation Plan</text>
+                        <ArrowInOut x={planOrigin[0] + pointLoad.coordB} y={planOrigin[1] - pointLoad.coordL} magnitude={pointLoad.kips}/>
+                        <MomentPlan x={planOrigin[0] + moment.coordB} y={planOrigin[1] - moment.coordL} magnitude={moment.kipft} along={eccentricityDirection}/>
+                    </svg>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsPlanRotated)}/>
+                        <CenterAxis foundationProps={foundationPropsPlanRotated}></CenterAxis>
+                        <OriginAxis origin={planRotatedOrigin} rotate={true}></OriginAxis>
+                        <text {...labelLocationsPlanRotated.bottom}>L</text>
+                        <text {...labelLocationsPlanRotated.perp}>B</text>
+                        <text {...labelLocationsPlanRotated.title}>Foundation Plan</text>
+                        <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL} y={planRotatedOrigin[1] + pointLoad.coordB} magnitude={pointLoad.kips}/>
+                        <MomentPlan x={planRotatedOrigin[0] + moment.coordL} y={planRotatedOrigin[1] + moment.coordB} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
+                    </svg>
+                </Box>
 
-            {/* foundation section and rotated section */}
-            <Box display='flex' sx={{ justifyContent: 'center'}}>
-                <svg {...SvgProps}>
-                    <rect {...(foundationProps(SvgProps, 'section'))}/>
-                    <text {...labelLocationsSection.bottom}>B</text>
-                    <text {...labelLocationsSection.perp}>t</text>
-                    <text {...labelLocationsSection.title}>Foundation Section</text>
-                    <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
-                </svg>
-                <svg {...SvgProps}>
-                     <rect {...(foundationProps(SvgProps, 'sectionRotated'))}/>
-                    <text {...labelLocationsSectionRotated.bottom}>L</text>
-                    <text {...labelLocationsSectionRotated.perp}>t</text>
-                    <text {...labelLocationsSectionRotated.title}>Foundation Section</text>
-                    <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
-                </svg>
-            </Box>
+                {/* foundation section and rotated section */}
+                <Box display='flex' sx={{ justifyContent: 'center'}}>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsSection)}/>
+                        <Grade foundationProps={foundationPropsSection}></Grade>
+                        <text {...labelLocationsSection.bottom}>B</text>
+                        <text {...labelLocationsSection.perp}>t</text>
+                        <text {...labelLocationsSection.title}>Foundation Section</text>
+                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
+                    </svg>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsSectionRotated)}/>
+                        <Grade foundationProps={foundationPropsSectionRotated}></Grade>
+                        <text {...labelLocationsSectionRotated.bottom}>L</text>
+                        <text {...labelLocationsSectionRotated.perp}>t</text>
+                        <text {...labelLocationsSectionRotated.title}>Foundation Section</text>
+                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                    </svg>
+                </Box>
 
-            <Divider sx={{mt: 3}} />
-            
-            <Box>
-                <Typography variant='h3' align='left' sx={{ my: 2, fontSize: '2em' }}>Calculations</Typography>
-            </Box>
+                <Divider sx={{mt: 3}} />
+                
+                <Box>
+                    <Typography variant='h3' align='left' sx={{ my: 2, fontSize: '2em' }}>Calculations</Typography>
+                </Box>
 
-            <Typography {...calcProps}>Foundation Properties</Typography>
-            <Grid container>
-                <CalculationHeader/>
-                <CalculationLine name="width" variable="B" value={calculations.foundation.width} units='ft'/>
-                <CalculationLine name="length" variable="L" value={calculations.foundation.height} units='ft'/>
-                <CalculationLine name="thickness" variable="t" value={calculations.foundation.thickness} units='in'/>
-                <CalculationLine name="density" variable={'\u03B3'} value={calculations.foundation.density} units='kcf'/>
-                <CalculationLine name="weight" variable="w" value={calculations.foundation.weight} units='kips' formula={`B * L * t * ${'\u03B3'}`}/>
-            </Grid>
+                <Typography {...calcProps}>Foundation Properties</Typography>
+                <Grid container>
+                    <CalculationHeader/>
+                    <CalculationLine name="width" variable="B" value={calculations.foundation.width} units='ft'/>
+                    <CalculationLine name="length" variable="L" value={calculations.foundation.height} units='ft'/>
+                    <CalculationLine name="thickness" variable="t" value={calculations.foundation.thickness} units='in'/>
+                    <CalculationLine name="density" variable={'\u03B3'} value={calculations.foundation.density} units='kcf'/>
+                    <CalculationLine name="weight" variable="w" value={calculations.foundation.weight} units='kips' formula={`B * L * t * ${'\u03B3'}`}/>
+                </Grid>
 
-            <Typography {...calcProps}>Applied Point Load</Typography>
-            <Grid container>
-                <CalculationHeader/>
-                <CalculationLine name="point load" variable="P" value={calculations.pointLoad.magnitude} units='kips'/>
-                <CalculationLine name="eccentricity b" variable="Ep_b" value={calculations.pointLoad.eB} units='ft'/>
-                <CalculationLine name="eccentricity l" variable="Ep_l" value={calculations.pointLoad.eL} units='ft'/>
-                <CalculationLine name="eccentric moment b" variable="EMp_b" value={calculations.pointLoad.mB} units='kip-ft' formula='P * Ep_b'/>
-                <CalculationLine name="eccentric moment l" variable="EMp_l" value={calculations.pointLoad.mL} units='kip-ft' formula='P * Ep_l'/>
-            </Grid>
+                <Typography {...calcProps}>Applied Point Load</Typography>
+                <Grid container>
+                    <CalculationHeader/>
+                    <CalculationLine name="point load" variable="P" value={calculations.pointLoad.magnitude} units='kips'/>
+                    <CalculationLine name="eccentricity b" variable="Ep_b" value={calculations.pointLoad.eB} units='ft'/>
+                    <CalculationLine name="eccentricity l" variable="Ep_l" value={calculations.pointLoad.eL} units='ft'/>
+                    <CalculationLine name="eccentric moment b" variable="EMp_b" value={calculations.pointLoad.mB} units='kip-ft' formula='P * Ep_b'/>
+                    <CalculationLine name="eccentric moment l" variable="EMp_l" value={calculations.pointLoad.mL} units='kip-ft' formula='P * Ep_l'/>
+                </Grid>
 
-            <Typography {...calcProps}>Applied Moment</Typography>
-            <Grid container>
-                <CalculationHeader/>
-                <CalculationLine name="moment" variable="M_b" value={calculations.moment.mB} units='kip-ft'/>
-                <CalculationLine name="moment" variable="M_l" value={calculations.moment.mL} units='kip-ft'/>
-                <CalculationLine name="along" variable={calculations.moment.along} value={'-'} units='-'/>
-                <CalculationLine name="eccentricity b" variable="Em_b" value={calculations.moment.eB} units='ft'/>
-                <CalculationLine name="eccentricity l" variable="Em_l" value={calculations.moment.eL} units='ft'/>
-            </Grid>
+                <Typography {...calcProps}>Applied Moment</Typography>
+                <Grid container>
+                    <CalculationHeader/>
+                    <CalculationLine name="moment" variable="M_b" value={calculations.moment.mB} units='kip-ft'/>
+                    <CalculationLine name="moment" variable="M_l" value={calculations.moment.mL} units='kip-ft'/>
+                    <CalculationLine name="along" variable={calculations.moment.along} value={'-'} units='-'/>
+                    <CalculationLine name="eccentricity b" variable="Em_b" value={calculations.moment.eB} units='ft'/>
+                    <CalculationLine name="eccentricity l" variable="Em_l" value={calculations.moment.eL} units='ft'/>
+                </Grid>
 
-            <Typography {...calcProps}>Summations / Totals</Typography>
-            <Grid container>
-                <CalculationHeader/>
-                <CalculationLine name="vertical load" variable="Pt" value={calculationsPressures.sumP} units='kips' formula='w + P'/>
-                <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsPressures.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
-                <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsPressures.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
-            </Grid>
+                <Typography {...calcProps}>Summations / Totals</Typography>
+                <Grid container>
+                    <CalculationHeader/>
+                    <CalculationLine name="vertical load" variable="Pt" value={calculationsSums.sumP} units='kips' formula='w + P'/>
+                    <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsSums.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
+                    <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsSums.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
+                </Grid>
 
-            <Typography {...calcProps}>Soil Bearing Pressures</Typography>
-            <Grid container>
-                <CalculationHeader/>
-                <CalculationLine name="sum vertical load" variable="Pt" value={calculationsPressures.sumP} units='kips' formula='w + P'/>
-                <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft2' formula='B * L'/>
-                <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsPressures.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
-                <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsPressures.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
-                <CalculationLine name="section modulus BB" variable="Sbb" value={calculations.foundation.sbb} units='ft3' formula='L * B^2 / 6'/>
-                <CalculationLine name="section modulus LL" variable="Sll" value={calculations.foundation.sll} units='ft3' formula='L^2 * B / 6'/>
-                <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsPressures.sumP) / calculations.foundation.area} units='ksf' formula='Pt / A'/>
-                <CalculationLine name="moment stress BB" variable="q_bb" value={(calculationsPressures.sumMbb) / calculations.foundation.sbb} units='ksf' formula='Mt_bb / Sbb'/>
-                <CalculationLine name="moment stress LL" variable="q_ll" value={(calculationsPressures.sumMll) / calculations.foundation.sll} units='ksf' formula='Mt_ll / Sll'/>
-                <CalculationLine name="q max BB" variable="qbb_max" value={calculationsPressures.bbTrpz.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection=='B'} error={{msg: calculationsPressures.bbTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
-                <CalculationLine name="q min BB" variable="qbb_min" value={calculationsPressures.bbTrpz.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection=='B'} error={{msg: calculationsPressures.bbTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
-                <CalculationLine name="q max LL" variable="qll_max" value={calculationsPressures.llTrpz.qmax} units='ksf' formula='Pt/A + (Mt_ll / Sll)' highlight={eccentricityDirection=='L'} error={{msg: calculationsPressures.llTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
-                <CalculationLine name="q min LL" variable="qll_min" value={calculationsPressures.llTrpz.qmin} units='ksf' formula='Pt/A - (Mt_ll / Sll)' highlight={eccentricityDirection=='L'} error={{msg: calculationsPressures.llTrpz.qmin < 0 ? 'NG, uplift' : ''}}/>
-                {(calculationsPressures.bbTrpz.qmin < 0 || calculationsPressures.llTrpz.qmin < 0) &&
-                    <>
-                        <Grid size={12}>
-                            <Typography>...</Typography>
-                        </Grid>
-                        <CalculationLine name="effective width" variable="Beff" value={calculationsPressures.beff} units='ft' formula='3 * (B / 2 - Mt_bb / Pt)'/>
-                        <CalculationLine name="effective length" variable="Leff" value={calculationsPressures.leff} units='ft' formula='3 * (L / 2 - Mt_ll / Pt)'/>
-                        <CalculationLine name="q max BB" variable="qbb_max" value={2*calculationsPressures.sumP / (calculations.foundation.height * calculationsPressures.beff)} units='ksf' formula='(2 * Pt) / (L * Beff)' highlight={eccentricityDirection=='B'}/>
-                        <CalculationLine name="q min BB" variable="qbb_min" value={0} units='ksf' highlight={eccentricityDirection=='B'}/>
-                        <CalculationLine name="q max LL" variable="qll_max" value={2*calculationsPressures.sumP / (calculations.foundation.width * calculationsPressures.leff)} units='ksf' formula='(2 * Pt) / (B * Leff)' highlight={eccentricityDirection=='L'}/>
-                        <CalculationLine name="q min LL" variable="qll_min" value={0} units='ksf' highlight={eccentricityDirection=='L'}/>
-                    </>
-                }
-            </Grid>
-            <Typography {...calcProps}>Resulting Soil Bearing Pressures</Typography>
-            <Box display='flex' sx={{ justifyContent: 'center'}}>
-                <svg {...SvgProps}>
-                    <rect {...(foundationProps(SvgProps, 'section'))}/>
-                    <text {...labelLocationsSection.bottom}>B</text>
-                    <text {...labelLocationsSection.perp}>t</text>
-                    <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
-                </svg>
-                <svg {...SvgProps}>
-                    <rect {...(foundationProps(SvgProps, 'sectionRotated'))}/>
-                    <text {...labelLocationsSectionRotated.bottom}>L</text>
-                    <text {...labelLocationsSectionRotated.perp}>t</text>
-                    <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                    {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
-                </svg>
-            </Box>
+                <Typography {...calcProps}>Soil Bearing Pressures</Typography>
+                <Grid container>
+                    <CalculationHeader/>
+                    <CalculationLine name="sum vertical load" variable="Pt" value={calculationsSums.sumP} units='kips' formula='w + P'/>
+                    <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft2' formula='B * L'/>
+                    <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsSums.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
+                    <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsSums.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
+                    <CalculationLine name="section modulus BB" variable="Sbb" value={calculations.foundation.sbb} units='ft3' formula='L * B^2 / 6'/>
+                    <CalculationLine name="section modulus LL" variable="Sll" value={calculations.foundation.sll} units='ft3' formula='L^2 * B / 6'/>
+                    <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsSums.sumP) / calculations.foundation.area} units='ksf' formula='Pt / A'/>
+                    <CalculationLine name="moment stress BB" variable="q_bb" value={(calculationsSums.sumMbb) / calculations.foundation.sbb} units='ksf' formula='Mt_bb / Sbb'/>
+                    <CalculationLine name="moment stress LL" variable="q_ll" value={(calculationsSums.sumMll) / calculations.foundation.sll} units='ksf' formula='Mt_ll / Sll'/>
+                    {calculationsPressuresTrapezoid.bb.qmax > calculationsPressuresTrapezoid.bb.qmin ? 
+                        <>
+                            <CalculationLine name="q max BB" variable="qbb_max" value={calculationsPressuresTrapezoid.bb.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0)? 'NG, uplift' : ''}}/>
+                            <CalculationLine name="q min BB" variable="qbb_min" value={calculationsPressuresTrapezoid.bb.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        </>
+                            :
+                        <>
+                            <CalculationLine name="q max BB" variable="qbb_max" value={calculationsPressuresTrapezoid.bb.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
+                            <CalculationLine name="q min BB" variable="qbb_min" value={calculationsPressuresTrapezoid.bb.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        </>
+                    }
+                    <CalculationLine name="q max LL" variable="qll_max" value={calculationsPressuresTrapezoid.ll.qmax} units='ksf' formula='Pt/A + (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0) ? 'NG, uplift' : ''}}/>
+                    <CalculationLine name="q min LL" variable="qll_min" value={calculationsPressuresTrapezoid.ll.qmin} units='ksf' formula='Pt/A - (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0) ? 'NG, uplift' : ''}}/>
+                    {(calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.ll.qmin < 0 ||
+                    calculationsPressuresTrapezoid.bb.qmax < 0 || calculationsPressuresTrapezoid.ll.qmax < 0
+                    ) &&
+                        <>
+                            <Grid size={12}>
+                                <Typography>...</Typography>
+                            </Grid>
+                            <CalculationLine name="effective width" variable="Beff" value={calculationsPressuresTrapezoid.beff} units='ft' formula='3 * (B / 2 - |Mt_bb| / Pt)'/>
+                            <CalculationLine name="effective length" variable="Leff" value={calculationsPressuresTrapezoid.leff} units='ft' formula='3 * (L / 2 - |Mt_ll| / Pt)'/>
+                            <CalculationLine name="q max BB" variable="qbb_max" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.qmaxBB : '-'} units='ksf' formula='(2 * Pt) / (L * Beff)' highlight={eccentricityDirection==='B'}/>
+                            <CalculationLine name="q min BB" variable="qbb_min" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.qminBB : '-'} units='ksf' highlight={eccentricityDirection==='B'}/>
+                            <CalculationLine name="q max LL" variable="qll_max" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.qmaxLL : '-'} units='ksf' formula='(2 * Pt) / (B * Leff)' highlight={eccentricityDirection==='L'}/>
+                            <CalculationLine name="q min LL" variable="qll_min" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.qminLL : '-'} units='ksf' highlight={eccentricityDirection==='L'}/>
+                        </>
+                    }
+                </Grid>
+                <Typography {...calcProps}>Resulting Soil Bearing Pressures</Typography>
+                <Box display='flex' sx={{ justifyContent: 'center'}}>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsSection)}/>
+                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
+                        <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>B-B</text>
+                        <text {...labelLocationsSection.perp}>t</text>
+                        {(calculationsPressuresTrapezoid.bb.qmin > 0 && calculationsPressuresTrapezoid.bb.qmax > 0)
+                            && <SoilBearingPressure
+                                    foundationProps={foundationPropsSection}
+                                    qLeft={calculationsPressuresTrapezoid.bb.qmin}
+                                    qRight={calculationsPressuresTrapezoid.bb.qmax}
+                                    shape={{type: 'trapezoidal'}}/>}
+                        {(calculationsPressuresTrapezoid.bb.qmin <= 0 || calculationsPressuresTrapezoid.bb.qmax <= 0)
+                            && <SoilBearingPressure
+                                foundationProps={foundationPropsSection}
+                                qLeft={calculationsPressuresTriangular.qminBB}
+                                qRight={calculationsPressuresTriangular.qmaxBB}
+                                shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.beff, reverse: calculationsSums.sumMbb <= 0 ? true : false}}/>}
+                        </svg>
+                    <svg {...SvgProps}>
+                        <rect {...(foundationPropsSectionRotated)}/>
+                        <text {...labelLocationsSectionRotated.perp}>t</text>
+                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                        <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>L-L</text>
+                        {(calculationsPressuresTrapezoid.ll.qmin > 0 && calculationsPressuresTrapezoid.ll.qmax > 0)
+                            && <SoilBearingPressure
+                                    foundationProps={foundationPropsSectionRotated}
+                                    qLeft={calculationsPressuresTrapezoid.ll.qmin}
+                                    qRight={calculationsPressuresTrapezoid.ll.qmax}
+                                    shape={{type: 'trapezoidal'}}/>}
+                        {(calculationsPressuresTrapezoid.ll.qmin <= 0 || calculationsPressuresTrapezoid.ll.qmax <= 0)
+                            && <SoilBearingPressure
+                                foundationProps={foundationPropsSectionRotated}
+                                qLeft={calculationsPressuresTriangular.qminLL}
+                                qRight={calculationsPressuresTriangular.qmaxLL}
+                                shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.leff, reverse: calculationsSums.sumMll <= 0 ? true : false}}/>}
+                    </svg>
+                </Box>
+            </>}
         </>
     );
 };
