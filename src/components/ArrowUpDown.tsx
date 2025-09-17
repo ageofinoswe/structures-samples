@@ -10,10 +10,10 @@ function Arrow({x, y, magnitude}: ArrowProps) {
     const arrowProps = {
         fill: 'none',
         stroke: 'black',
-        'stroke-width': 0.2,
+        'strokeWidth': 0.2,
     };
 
-    const arrowLength = 5;
+    const arrowLength = 8;
     const arrowLine = {
         x1: x,
         y1: y,
@@ -35,6 +35,7 @@ function Arrow({x, y, magnitude}: ArrowProps) {
         <>
             <line {...arrowLine} {...arrowProps}></line>
             <path d={arrowDown ? arrowHeadDown : arrowHeadUp} {...arrowProps}></path>
+            <text textAnchor='middle' fontSize={1.5} x={x} y={y - arrowLength - 1}>{magnitude} kips</text>
         </>
     )
 }

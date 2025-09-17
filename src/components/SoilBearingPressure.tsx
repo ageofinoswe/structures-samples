@@ -20,14 +20,14 @@ interface SvgRectProps {
     height: number,
     fill: string,
     stroke: string,
-    'stroke-width': number
+    'strokeWidth': number
 }
 
 function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureProps) {
     const pathProps = {
         fill: '#3f8b50ff',
         stroke: 'black',
-        'stroke-width': 0.1,
+        'strokeWidth': 0.1,
     };
     const scale: (pressure: number) => number = (pressure) => {
         const scaleFactor = 4;
@@ -76,25 +76,25 @@ function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureP
         <>
             {<path d={soilBearingPressureDrawing} {...pathProps}/>}
             {(shape.type === 'triangular' && (shape.reverse ?? false))
-                &&  <>  {<text x={q1[0]} y={q1[1] + 3} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
-                        {<text x={q2[0]} y={q2[1] + 3} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
+                &&  <>  {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
+                        {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                     </>
             }   
             {(shape.type === 'triangular' && !(shape.reverse ?? false))
-                &&  <>  {<text x={q1[0]} y={q1[1] + 3} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
+                &&  <>  {<text x={q1[0] - 3} y={q1[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                         {<text x={q2[0]} y={q2[1] + 3} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                     </>
             }
             {(shape.type === 'trapezoidal' && qLeft <= qRight) 
                 &&  <>
-                        {<text x={q1[0]} y={q1[1] + 3} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
-                        {<text x={q2[0]} y={q2[1] + 3} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
+                        {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
+                        {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                     </>
             }
             {(shape.type === 'trapezoidal' && qLeft > qRight) 
                 &&  <>
-                        {<text x={q1[0]} y={q1[1] + 3} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
-                        {<text x={q2[0]} y={q2[1] + 3} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
+                        {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
+                        {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                     </>
             }
 

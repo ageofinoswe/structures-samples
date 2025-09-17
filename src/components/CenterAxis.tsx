@@ -5,14 +5,14 @@ interface SvgRectProps {
     height: number,
     fill: string,
     stroke: string,
-    'stroke-width': number
+    'strokeWidth': number
 }
 
 function CenterAxis({foundationProps}: {foundationProps: SvgRectProps}) {
     const lineProps = {
         stroke: 'purple',
-        'stroke-width': .1,
-        'stroke-dasharray': 1.5,
+        'strokeWidth': .1,
+        'strokeDasharray': 1.5,
     }
     const extension = 0.75;
     return (

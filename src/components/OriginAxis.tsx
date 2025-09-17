@@ -8,7 +8,7 @@ function Axis({origin, rotate = false} : Shift) {
     const length = 2;
     const lineProps = {
         stroke: 'black',
-        'stroke-width': 0.25
+        'strokeWidth': 0.25
     }
     return(
         <>

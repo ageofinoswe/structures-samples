@@ -17,7 +17,7 @@ function MomentPlan({x, y, magnitude, along, rotate=false} : MomentProps) {
     const drawingProps = {
         fill: 'none',
         stroke: 'blue',
-        'stroke-width': 0.2,
+        'strokeWidth': 0.2,
     };
 
     const direction = magnitude >= 0 ? 'clockwise' : 'counterclockwise'

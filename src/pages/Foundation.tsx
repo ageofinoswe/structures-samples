@@ -10,6 +10,7 @@ import CalculationHeader from "../components/CalculationHeader";
 import SoilBearingPressure from "../components/SoilBearingPressure";
 import CenterAxis from "../components/CenterAxis";
 import Grade from "../components/Grade";
+import PlusOrMinus from "../components/PlusOrMinus";
 
 function Foundation() {
     // types and const declarations
@@ -36,7 +37,7 @@ function Foundation() {
         height: number,
         fill: string,
         stroke: string,
-        'stroke-width': number
+        'strokeWidth': number
     }
     interface SvgProps {
         viewBox: string,
@@ -56,7 +57,6 @@ function Foundation() {
         coordL: number,
     }
     interface Moment {
-        along: string,
         kipft: number,
         coordB: number,
         coordL: number,
@@ -69,67 +69,74 @@ function Foundation() {
     const [fdnDensity, setFdnDensity] = React.useState(0.145);
     const [fdnCenter, setFdnCenter] = React.useState([0,0]);
     const [pointLoad, setPointLoad] = React.useState<PointLoad>({kips: 0, coordB: 0, coordL: 0});
-    const [moment, setMoment] = React.useState<Moment>({along: 'B', kipft: 0, coordB: 0, coordL: 0});
+    const [moment, setMoment] = React.useState<Moment>({kipft: 0, coordB: 0, coordL: 0});
     const [eccentricityDirection, setEccentricityDirection] = React.useState('B');
 
     // foundation handlers
     const handleFdnWidthChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnWidth(parseInt(event.target.value));
-        centerLoads(parseInt(event.target.value), fdnHeight);
+        setFdnCenter([parseInt(event.target.value) / 2, fdnCenter[1]]);
     }
     const handleFdnHeightChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnHeight(parseInt(event.target.value));
-        centerLoads(fdnWidth, parseInt(event.target.value));
+        setFdnCenter([fdnCenter[0], parseInt(event.target.value) / 2]);
     }
     const handleFdnThicknessChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnThickness(parseInt(event.target.value));
     }
-    const centerLoads: (width: number, height: number) => void = (width, height) => {
-        const centeredPointLoad: PointLoad = {...pointLoad, coordB: width / 2, coordL: height / 2};
-        const centeredMoment: Moment = {...moment, coordB: width / 2, coordL: height / 2}; 
-        setPointLoad(centeredPointLoad);
-        setMoment(centeredMoment);
-        setFdnCenter([width / 2, height / 2]);
+
+    const negatePointLoad: (event: any, field: string) => void = (event, field) => {
+        const modifiedPointLoads: PointLoad = 
+            {...pointLoad,
+                kips: field === 'kips' ? pointLoad.kips * -1 : pointLoad.kips,
+                coordB: field === 'B' ? pointLoad.coordB * -1 : pointLoad.coordB,
+                coordL: field === 'L' ? pointLoad.coordL * -1 : pointLoad.coordL,
+            };
+        setPointLoad(modifiedPointLoads);
     }
 
+    const negateMoment: (event: any, field: string) => void = (event, field) => {
+        const modifiedMoment: Moment = 
+            {...moment,
+                kipft: field === 'kipft' ? moment.kipft * -1 : moment.kipft,
+                coordB: field === 'B' ? moment.coordB * -1 : moment.coordB,
+                coordL: field === 'L' ? moment.coordL * -1 : moment.coordL,
+            };
+        setMoment(modifiedMoment);
+    }
     // point load handlers
     const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: PointLoadFields) => void = (event, field) => {
         const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
         const modifiedPointLoads: PointLoad = 
             {...pointLoad,
                 kips: field === 'kips' ? newValue : pointLoad.kips,
-                coordB: field === 'B' ? newValue + fdnCenter[0] : pointLoad.coordB,
-                coordL: field === 'L' ? newValue + fdnCenter[1] : pointLoad.coordL,
+                coordB: field === 'B' ? newValue : pointLoad.coordB,
+                coordL: field === 'L' ? newValue : pointLoad.coordL,
             };
-        setPointLoad(modifiedPointLoads);
+        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kips')
+            setPointLoad(modifiedPointLoads);
     }
 
     // moment handlers
     const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: MomentFields) => void = (event, field) => {
         const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
         const modifiedMoments: Moment =
-                {...moment,
-                    kipft: field === 'kipft' ? newValue : moment.kipft,
-                    coordB: field === 'B' ? newValue + fdnCenter[0] : moment.coordB,
-                    coordL: field === 'L' ? newValue + fdnCenter[1] : moment.coordL,
-                };
-        setMoment(modifiedMoments);
-    }
-    const handleModifyMomentAlong: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
-        const modifiedMoments: Moment =
             {...moment,
-                along: event.target.value
+                kipft: field === 'kipft' ? newValue : moment.kipft,
+                coordB: field === 'B' ? newValue : moment.coordB,
+                coordL: field === 'L' ? newValue : moment.coordL,
             };
-        setMoment(modifiedMoments);
+        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kipft')
+            setMoment(modifiedMoments);
     }
     const handleEccentricityDirection: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
-        if(event.target.value === 'B'){
-            setPointLoad({...pointLoad, coordL: fdnCenter[1]})
-            setMoment({...moment, coordL: fdnCenter[1]})
+         if(event.target.value === 'B'){
+            setPointLoad({...pointLoad, coordL: 0})
+            setMoment({...moment, coordL: 0})
         }
         else{
-            setPointLoad({...pointLoad, coordB: fdnCenter[0]})
-            setMoment({...moment, coordB: fdnCenter[0]})
+            setPointLoad({...pointLoad, coordB: 0})
+            setMoment({...moment, coordB: 0})
         }
         setEccentricityDirection(event.target.value);
     }
@@ -150,9 +157,9 @@ function Foundation() {
             y: coordY,
             width: rectWidth,
             height: rectHeight,
-            fill: '#e0e0e0',
+            fill: '#949494ff',
             stroke: 'black',
-            'stroke-width': 0.1
+            'strokeWidth': 0.1
         }; 
         return fdnProps;
     }
@@ -235,17 +242,17 @@ function Foundation() {
         },
         pointLoad: {
             magnitude: pointLoad.kips,
-            eB: pointLoad.coordB - fdnCenter[0],
-            eL: pointLoad.coordL - fdnCenter[1],
-            mB: pointLoad.kips * (pointLoad.coordB - fdnCenter[0]),
-            mL: pointLoad.kips * (pointLoad.coordL - fdnCenter[1]),
+            eB: pointLoad.coordB,
+            eL: pointLoad.coordL,
+            mB: pointLoad.kips * pointLoad.coordB,
+            mL: pointLoad.kips * pointLoad.coordL,
             along: eccentricityDirection === 'B' ? 'B-B' : 'L-L',
         },
         moment: {
             mB: eccentricityDirection === 'B' ? moment.kipft : 0,
             mL: eccentricityDirection === 'L' ? moment.kipft : 0,
-            eB: moment.coordB - fdnCenter[0],
-            eL: moment.coordL - fdnCenter[1],
+            eB: moment.coordB,
+            eL: moment.coordL,
             along: eccentricityDirection === 'B' ? 'B-B' : 'L-L',
         },
     }
@@ -307,16 +314,19 @@ function Foundation() {
                                 </RadioGroup>
                             </FormControl>         
                         <Typography variant='subtitle1'>Point Loads</Typography>
-                            <Box display='flex'>
+                            <Box display='flex' alignItems='center'>
                                 {pointLoadTextInputFields.map(field => 
-                                    <TextField
-                                        disabled={field !== 'kips' && eccentricityDirection !== field}
-                                        sx={{pr:3}}
-                                        label={field}
-                                        value={field === 'kips' ? pointLoad.kips : field === 'B' ? pointLoad.coordB - fdnCenter[0] : pointLoad.coordL - fdnCenter[1]}
-                                        size='small'
-                                        variant='standard'
-                                        onChange={event => handleModifyPointLoad(event, field)}/>
+                                    <>
+                                        <PlusOrMinus active={field === 'kips' ? pointLoad.kips >= 0 : field === 'B' ? pointLoad.coordB >= 0 : pointLoad.coordL >= 0} field={field} negate={negatePointLoad}></PlusOrMinus>
+                                        <TextField
+                                                disabled={field !== 'kips' && eccentricityDirection !== field}
+                                                sx={{pr:3}}
+                                                label={field}
+                                                value={field === 'kips' ? pointLoad.kips : field === 'B' ? pointLoad.coordB : pointLoad.coordL}
+                                                size='small'
+                                                variant='standard'
+                                                onChange={event => handleModifyPointLoad(event, field)}/>
+                                    </>
                                 )}
                             </Box>
                     </Stack>
@@ -329,7 +339,7 @@ function Foundation() {
                             <FormLabel>
                                 Along
                             </FormLabel>
-                            <RadioGroup row value={eccentricityDirection} onChange={event => handleModifyMomentAlong(event)}>
+                            <RadioGroup row value={eccentricityDirection}>
                                 <FormControlLabel value={'B'} control={<Radio size='small' />} label="B" />
                                 <FormControlLabel value={'L'} control={<Radio size='small' />} label="L" />
                             </RadioGroup>
@@ -337,14 +347,17 @@ function Foundation() {
                         <Typography variant='subtitle1'>Moment</Typography>
                             <Box alignItems='center' display='flex'>
                                 {momentTextInputFields.map(field =>
+                                <>
+                                    <PlusOrMinus active={field === 'kipft' ? moment.kipft >= 0 : field === 'B' ? moment.coordB >= 0 : moment.coordL >= 0} field={field} negate={negateMoment}></PlusOrMinus>
                                     <TextField
                                         disabled={field !== 'kipft' && eccentricityDirection !== field}
                                         sx={{pr:3}}
                                         label={field}
-                                        value={field === 'kipft' ? moment.kipft : field === 'B' ? moment.coordB - fdnCenter[0] : moment.coordL - fdnCenter[1]}
+                                        value={field === 'kipft' ? moment.kipft : field === 'B' ? moment.coordB : moment.coordL}
                                         size='small'
                                         variant='standard'
                                         onChange={event => handleModifyMoment(event, field)}/>
+                                </>
                                 )}
                             </Box>
                     </Stack>
@@ -367,8 +380,8 @@ function Foundation() {
                         <text {...labelLocationsPlan.bottom}>B</text>
                         <text {...labelLocationsPlan.perp}>L</text>
                         <text {...labelLocationsPlan.title}>Foundation Plan</text>
-                        <ArrowInOut x={planOrigin[0] + pointLoad.coordB} y={planOrigin[1] - pointLoad.coordL} magnitude={pointLoad.kips}/>
-                        <MomentPlan x={planOrigin[0] + moment.coordB} y={planOrigin[1] - moment.coordL} magnitude={moment.kipft} along={eccentricityDirection}/>
+                        <ArrowInOut x={planOrigin[0] + pointLoad.coordB + fdnCenter[0]} y={planOrigin[1] - pointLoad.coordL - fdnCenter[1]} magnitude={pointLoad.kips}/>
+                        <MomentPlan x={planOrigin[0] + moment.coordB + fdnCenter[0]} y={planOrigin[1] - moment.coordL - fdnCenter[1]} magnitude={moment.kipft} along={eccentricityDirection}/>
                     </svg>
                     <svg {...SvgProps}>
                         <rect {...(foundationPropsPlanRotated)}/>
@@ -377,8 +390,8 @@ function Foundation() {
                         <text {...labelLocationsPlanRotated.bottom}>L</text>
                         <text {...labelLocationsPlanRotated.perp}>B</text>
                         <text {...labelLocationsPlanRotated.title}>Foundation Plan</text>
-                        <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL} y={planRotatedOrigin[1] + pointLoad.coordB} magnitude={pointLoad.kips}/>
-                        <MomentPlan x={planRotatedOrigin[0] + moment.coordL} y={planRotatedOrigin[1] + moment.coordB} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
+                        <ArrowInOut x={planRotatedOrigin[0] + pointLoad.coordL + fdnCenter[1]} y={planRotatedOrigin[1] + pointLoad.coordB + fdnCenter[0]} magnitude={pointLoad.kips}/>
+                        <MomentPlan x={planRotatedOrigin[0] + moment.coordL + fdnCenter[1]} y={planRotatedOrigin[1] + moment.coordB + fdnCenter[0]} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
                     </svg>
                 </Box>
 
@@ -390,8 +403,8 @@ function Foundation() {
                         <text {...labelLocationsSection.bottom}>B</text>
                         <text {...labelLocationsSection.perp}>t</text>
                         <text {...labelLocationsSection.title}>Foundation Section</text>
-                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
+                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
                     </svg>
                     <svg {...SvgProps}>
                         <rect {...(foundationPropsSectionRotated)}/>
@@ -399,8 +412,8 @@ function Foundation() {
                         <text {...labelLocationsSectionRotated.bottom}>L</text>
                         <text {...labelLocationsSectionRotated.perp}>t</text>
                         <text {...labelLocationsSectionRotated.title}>Foundation Section</text>
-                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[0]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
                     </svg>
                 </Box>
 
@@ -452,11 +465,11 @@ function Foundation() {
                 <Grid container>
                     <CalculationHeader/>
                     <CalculationLine name="sum vertical load" variable="Pt" value={calculationsSums.sumP} units='kips' formula='w + P'/>
-                    <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft2' formula='B * L'/>
+                    <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft^2' formula='B * L'/>
                     <CalculationLine name="moment BB" variable="Mt_bb" value={calculationsSums.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
                     <CalculationLine name="moment LL" variable="Mt_ll" value={calculationsSums.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
-                    <CalculationLine name="section modulus BB" variable="Sbb" value={calculations.foundation.sbb} units='ft3' formula='L * B^2 / 6'/>
-                    <CalculationLine name="section modulus LL" variable="Sll" value={calculations.foundation.sll} units='ft3' formula='L^2 * B / 6'/>
+                    <CalculationLine name="section modulus BB" variable="Sbb" value={calculations.foundation.sbb} units='ft^3' formula='L * B^2 / 6'/>
+                    <CalculationLine name="section modulus LL" variable="Sll" value={calculations.foundation.sll} units='ft^3' formula='L^2 * B / 6'/>
                     <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsSums.sumP) / calculations.foundation.area} units='ksf' formula='Pt / A'/>
                     <CalculationLine name="moment stress BB" variable="q_bb" value={(calculationsSums.sumMbb) / calculations.foundation.sbb} units='ksf' formula='Mt_bb / Sbb'/>
                     <CalculationLine name="moment stress LL" variable="q_ll" value={(calculationsSums.sumMll) / calculations.foundation.sll} units='ksf' formula='Mt_ll / Sll'/>
@@ -493,10 +506,11 @@ function Foundation() {
                 <Box display='flex' sx={{ justifyContent: 'center'}}>
                     <svg {...SvgProps}>
                         <rect {...(foundationPropsSection)}/>
-                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
-                        <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>B-B</text>
                         <text {...labelLocationsSection.perp}>t</text>
+                        <Grade foundationProps={foundationPropsSection}></Grade>
+                        <ArrowUpDown x={sectionOrigin[0] + pointLoad.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
+                        <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>B-B</text>
                         {(calculationsPressuresTrapezoid.bb.qmin > 0 && calculationsPressuresTrapezoid.bb.qmax > 0)
                             && <SoilBearingPressure
                                     foundationProps={foundationPropsSection}
@@ -513,8 +527,9 @@ function Foundation() {
                     <svg {...SvgProps}>
                         <rect {...(foundationPropsSectionRotated)}/>
                         <text {...labelLocationsSectionRotated.perp}>t</text>
-                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                        <Grade foundationProps={foundationPropsSectionRotated}></Grade>
+                        <ArrowUpDown x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                        {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[0]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
                         <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>L-L</text>
                         {(calculationsPressuresTrapezoid.ll.qmin > 0 && calculationsPressuresTrapezoid.ll.qmax > 0)
                             && <SoilBearingPressure

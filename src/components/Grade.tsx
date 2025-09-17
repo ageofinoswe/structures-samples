@@ -5,13 +5,13 @@ interface SvgRectProps {
     height: number,
     fill: string,
     stroke: string,
-    'stroke-width': number
+    'strokeWidth': number
 }
 
 function Grade({foundationProps}: {foundationProps: SvgRectProps}) {
     const lineProps = {
         stroke: 'black',
-        'stroke-width': .2,
+        'strokeWidth': .2,
     }
     const extension = 8;
     return (
