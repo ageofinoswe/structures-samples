@@ -12,78 +12,143 @@ import CenterAxis from "../components/CenterAxis";
 import Grade from "../components/Grade";
 import PlusOrMinus from "../components/PlusOrMinus";
 
+// TYPES
+// foundation orientations is used to decide which graphic/drawing is being used
+type FoundationOrientations = 'plan' | 'planRotated' | 'section' | 'sectionRotated';
+// moment fields is used to determine which moment input field is being used 
+type MomentFields = 'kipft' | 'B' | 'L';
+// points load fields is used to determine which point load input field is being used
+type PointLoadFields = 'kips' | 'B' | 'L';
+
+// INTERFACES
+// text input props is used to specify the text input properties
+interface TextInputProps {
+    id?: string,
+    sx?: {},
+    label?: string,
+    defaultValue?: number,
+    size?: 'small' | 'medium',
+    variant?: 'standard' | 'outlined',
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void,
+};
+// svg rect props is used to specify the properties to draw an svg rectangle
+interface SvgRectProps {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fill: string,
+    stroke: string,
+    'strokeWidth': number
+}
+// svg props is used to specify the svg properties
+interface SvgProps {
+    viewBox: string,
+    width: string,
+    height: string,
+}
+// svg text props is used to specify svg text properies
+interface SvgTextProps {
+    x: number,
+    y: number,
+    fontSize: number,
+    textAnchor?: string,
+    dominantBaseline?: string,
+}
+// point load is used to specify the properties of the point load being input
+interface PointLoad {
+    kips: number,
+    coordB: number,
+    coordL: number,
+}
+// moment is used to specify the properties of the moment being input
+interface Moment {
+    kipft: number,
+    coordB: number,
+    coordL: number,
+}
 function Foundation() {
-    // types and const declarations
-    type FoundationOrientations = 'plan' | 'planRotated' | 'section' | 'sectionRotated';
-    type MomentFields = 'kipft' | 'B' | 'L';
-    type PointLoadFields = 'kips' | 'B' | 'L';
-    const momentTextInputFields: MomentFields[] = ['kipft', 'B', 'L'];
-    const pointLoadTextInputFields: PointLoadFields[] = ['kips', 'B', 'L'];
-
-    // interfaces
-    interface TextInputProps {
-        id?: string,
-        sx?: {},
-        label?: string,
-        defaultValue?: number,
-        size?: 'small' | 'medium',
-        variant?: 'standard' | 'outlined',
-        onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void,
-    };
-    interface SvgRectProps {
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        fill: string,
-        stroke: string,
-        'strokeWidth': number
-    }
-    interface SvgProps {
-        viewBox: string,
-        width: string,
-        height: string,
-    }
-    interface SvgTextProps {
-        x: number,
-        y: number,
-        fontSize: number,
-        textAnchor?: string,
-        dominantBaseline?: string,
-    }
-    interface PointLoad {
-        kips: number,
-        coordB: number,
-        coordL: number,
-    }
-    interface Moment {
-        kipft: number,
-        coordB: number,
-        coordL: number,
-    }
-
-    // state variables
+    // STATE VARIABLES
+    // foundation width, height, thickness, density, and center
     const [fdnWidth, setFdnWidth] = React.useState(0);
     const [fdnHeight, setFdnHeight] = React.useState(0);
     const [fdnThickness, setFdnThickness] = React.useState(0);
     const [fdnDensity, setFdnDensity] = React.useState(0.145);
     const [fdnCenter, setFdnCenter] = React.useState([0,0]);
+    // point load and moment
     const [pointLoad, setPointLoad] = React.useState<PointLoad>({kips: 0, coordB: 0, coordL: 0});
     const [moment, setMoment] = React.useState<Moment>({kipft: 0, coordB: 0, coordL: 0});
-    const [eccentricityDirection, setEccentricityDirection] = React.useState('B');
+    // eccentricity, must be along B or along L
+    const [eccentricityDirection, setEccentricityDirection] = React.useState<'B' | 'L'>('B');
 
-    // foundation handlers
+    // STATE HANDLERS
+    // updates foundation width, and sets the foundation center
     const handleFdnWidthChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnWidth(parseInt(event.target.value));
         setFdnCenter([parseInt(event.target.value) / 2, fdnCenter[1]]);
     }
+    // updates the foundation height, and sets the foundation center
     const handleFdnHeightChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnHeight(parseInt(event.target.value));
         setFdnCenter([fdnCenter[0], parseInt(event.target.value) / 2]);
     }
+    // updates the foundation thickness
     const handleFdnThicknessChange: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
         setFdnThickness(parseInt(event.target.value));
     }
+    // verifies and updates the point load
+    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: PointLoadFields) => void = (event, field) => {
+        // verify a number is input
+        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
+        const modifiedPointLoads: PointLoad = 
+            {...pointLoad,
+                kips: field === 'kips' ? newValue : pointLoad.kips,
+                coordB: field === 'B' ? newValue : pointLoad.coordB,
+                coordL: field === 'L' ? newValue : pointLoad.coordL,
+            };
+        // verify that the B and L value does not exceed half the foundation width/height (out of bounds / invalid)
+        // field='kips' does not require verification
+        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kips')
+            setPointLoad(modifiedPointLoads);
+    }
+    // verifies and updates the moment
+    const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: MomentFields) => void = (event, field) => {
+        // verify a number is input
+        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
+        const modifiedMoments: Moment =
+            {...moment,
+                kipft: field === 'kipft' ? newValue : moment.kipft,
+                coordB: field === 'B' ? newValue : moment.coordB,
+                coordL: field === 'L' ? newValue : moment.coordL,
+            };
+        // verify that the B and L value does not exceed half the foundation width/height (out of bounds / invalid)
+        // field='kipft' does not require verification
+        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kipft')
+            setMoment(modifiedMoments);
+    }
+    // updates the eccentricity direction
+    const handleEccentricityDirection: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
+        // L --> B, zero out the value in L 
+        if(event.target.value === 'B'){
+            setPointLoad({...pointLoad, coordL: 0})
+            setMoment({...moment, coordL: 0})
+        }
+        // B --> L, zero out the value in B
+        else{
+            setPointLoad({...pointLoad, coordB: 0})
+            setMoment({...moment, coordB: 0})
+        }
+        // update the eccentricity direction
+        setEccentricityDirection(event.target.value as 'B' | 'L');
+    }
+
+
+    const momentTextInputFields: MomentFields[] = ['kipft', 'B', 'L'];
+    const pointLoadTextInputFields: PointLoadFields[] = ['kips', 'B', 'L'];
+
+
+
+
 
     const negatePointLoad: (event: any, field: string) => void = (event, field) => {
         const modifiedPointLoads: PointLoad = 
@@ -103,42 +168,6 @@ function Foundation() {
                 coordL: field === 'L' ? moment.coordL * -1 : moment.coordL,
             };
         setMoment(modifiedMoment);
-    }
-    // point load handlers
-    const handleModifyPointLoad: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: PointLoadFields) => void = (event, field) => {
-        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
-        const modifiedPointLoads: PointLoad = 
-            {...pointLoad,
-                kips: field === 'kips' ? newValue : pointLoad.kips,
-                coordB: field === 'B' ? newValue : pointLoad.coordB,
-                coordL: field === 'L' ? newValue : pointLoad.coordL,
-            };
-        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kips')
-            setPointLoad(modifiedPointLoads);
-    }
-
-    // moment handlers
-    const handleModifyMoment: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: MomentFields) => void = (event, field) => {
-        const newValue: number = isNaN(parseInt(event.target.value)) ? 0 : parseInt(event.target.value);
-        const modifiedMoments: Moment =
-            {...moment,
-                kipft: field === 'kipft' ? newValue : moment.kipft,
-                coordB: field === 'B' ? newValue : moment.coordB,
-                coordL: field === 'L' ? newValue : moment.coordL,
-            };
-        if((field === 'B' && newValue <= fdnCenter[0]) || (field === 'L' && newValue <= fdnCenter[1]) || field === 'kipft')
-            setMoment(modifiedMoments);
-    }
-    const handleEccentricityDirection: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void = (event) => {
-         if(event.target.value === 'B'){
-            setPointLoad({...pointLoad, coordL: 0})
-            setMoment({...moment, coordL: 0})
-        }
-        else{
-            setPointLoad({...pointLoad, coordB: 0})
-            setMoment({...moment, coordB: 0})
-        }
-        setEccentricityDirection(event.target.value);
     }
 
     // foundation properties
