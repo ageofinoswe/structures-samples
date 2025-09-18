@@ -12,6 +12,7 @@ import CenterAxis from "../components/CenterAxis";
 import Grade from "../components/Grade";
 import PlusOrMinus from "../components/PlusOrMinus";
 
+
 // TYPES
 // foundation orientations is used to decide which graphic/drawing is being used
 type FoundationOrientations = 'plan' | 'planRotated' | 'section' | 'sectionRotated';
