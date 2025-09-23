@@ -1,3 +1,5 @@
+// draws point load svgs on the plan. x = into the page, o = out of the page
+
 interface ArrowProps {
     x: number,
     y: number,
@@ -6,6 +8,7 @@ interface ArrowProps {
 
 
 function ArrowInOut({x, y, magnitude}: ArrowProps) {
+    // determine the direction and define the svg props
     const into = magnitude >= 0 ? true : false;
     const arrowProps = {
         fill: 'none',
@@ -17,8 +20,9 @@ function ArrowInOut({x, y, magnitude}: ArrowProps) {
         cy: y,
         r: 0.75
     };
-    
     const offset = .75;
+
+    // draw the arrow
     const arrowInProps =   `M ${x},${y}
                             L ${x - offset},${y - offset} ${x + offset},${y + offset}
                             M ${x},${y}

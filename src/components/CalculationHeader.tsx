@@ -1,5 +1,12 @@
 import { Grid, Typography } from "@mui/material";
 
+// calculation header is used in the calculation sets - followed by calculation lines 
+
+// CALCULATION HEADER
+// CALCULATION LINE
+// CALCULATION LINE
+//...
+
 function CalculationHeader () {
     const props = {
         sx: {fontWeight: 'bold',
@@ -8,7 +15,7 @@ function CalculationHeader () {
 
     return (
         <>
-            <Grid size={1.5}>
+            <Grid size={2}>
                 <Typography {...props}>description</Typography>
             </Grid>
             <Grid size={1}>
@@ -23,7 +30,7 @@ function CalculationHeader () {
             <Grid size={2}>
                 <Typography {...props}>formula</Typography>
             </Grid>
-            <Grid size={5.5}>
+            <Grid size={5}>
                 <div></div>
             </Grid>
         </>

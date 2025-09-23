@@ -1,5 +1,12 @@
 import { Grid, Typography } from "@mui/material";
 
+// calculation lines is used in the calculation sets - prefaced with a calculation header
+
+// CALCULATION HEADER
+// CALCULATION LINE
+// CALCULATION LINE
+//...
+
 interface CalcLine {
     name: string,
     variable: string,
@@ -18,7 +25,7 @@ function CalculationLine({name, variable, value, units, formula='-', highlight=f
 
     return (
         <>
-            <Grid size={1.5}>
+            <Grid size={2}>
                 <Typography {...props}>{name}</Typography>
             </Grid>
             <Grid size={1}>
@@ -33,7 +40,7 @@ function CalculationLine({name, variable, value, units, formula='-', highlight=f
             <Grid size={2}>
                 <Typography {...props}>{formula}</Typography>
             </Grid>
-            <Grid sx={{pl:4}} size={5.5}>
+            <Grid sx={{pl:4}} size={5}>
                 {error.msg ? <Typography fontFamily={props.sx.fontFamily} color={error.msg ? 'red' : 'black'}>{error.msg}</Typography> : <div></div>}
             </Grid>
         </>

@@ -1,3 +1,12 @@
+// given a foundation svg rectangle, determine the center and draw a vertical and horizontal dashed line axis
+//   ________|________
+//   |       |       |
+//   |       |       |
+// --|-------|-------|--
+//   |       |       |
+//   |_______|_______|
+//           |
+
 interface SvgRectProps {
     x: number,
     y: number,

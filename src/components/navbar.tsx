@@ -37,10 +37,9 @@ function Navbar() {
                         <Typography sx={{...logoText, fontSize:20}}>amples</Typography>
                     </Stack>
                     <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
-                        <Tabs sx={tabStyle} value={value} onChange={handleChange} aria-label='navigation bar labels'>
-                            <Tab sx={tabStyle} value='one' component={Link} to='/vmdiagram' label='Shear & Moment Diagrams'/>
-                            <Tab sx={tabStyle} value='two' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
-                            <Tab sx={tabStyle} value='three' component={Link} to='/pier' label='Pier Foundation Depth'/>
+                        <Tabs sx={tabStyle} value={value} onChange={handleChange}>
+                            <Tab sx={tabStyle} value='one' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
+                            <Tab sx={tabStyle} value='two' component={Link} to='/pier' label='Pier Foundation Depth'/>
                         </Tabs>
                     </Box>
                 </Toolbar>

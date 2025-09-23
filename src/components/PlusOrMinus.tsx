@@ -1,5 +1,7 @@
 import { Button, Stack } from "@mui/material";
 
+// creates buttons for + or - to negate values in the input fields
+
 interface Active {
     active: boolean
     field: string,

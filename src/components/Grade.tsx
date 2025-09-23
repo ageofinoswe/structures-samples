@@ -1,3 +1,8 @@
+// used the foundation sections, draw the surrounding grade for the foundation
+//
+// -----grade-----___________-------grade-------
+//                |_________|
+
 interface SvgRectProps {
     x: number,
     y: number,

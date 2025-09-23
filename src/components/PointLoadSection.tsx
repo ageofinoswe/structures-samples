@@ -1,3 +1,11 @@
+// draws point load svgs on the section, up or down, and annotate it
+//         .
+//   |    /*\
+//   |     |
+//   |     |
+//  \*/    |
+//   `
+
 interface ArrowProps {
     x: number,
     y: number,
@@ -5,14 +13,13 @@ interface ArrowProps {
 };
 
 function Arrow({x, y, magnitude}: ArrowProps) {
+    // determine the direction and define the svg props
     const arrowDown = magnitude >= 0 ? true : false;
-
     const arrowProps = {
         fill: 'none',
         stroke: 'black',
         'strokeWidth': 0.2,
     };
-
     const arrowLength = 8;
     const arrowLine = {
         x1: x,
@@ -20,8 +27,9 @@ function Arrow({x, y, magnitude}: ArrowProps) {
         x2: x,
         y2: y - arrowLength,
     }
-
     const arrowHeadLength = .75;
+    
+    // draw the arrows
     const arrowHeadDown =   `M ${x},${y}
                             L ${x - arrowHeadLength},${y - arrowHeadLength}
                             M ${x},${y}
