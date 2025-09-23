@@ -37,10 +37,10 @@ function CalculationLine({name, variable, value, units, formula='-', highlight=f
             <Grid size={1}>
                 <Typography {...props}>{units}</Typography>
             </Grid>
-            <Grid size={2}>
+            <Grid size={3}>
                 <Typography {...props}>{formula}</Typography>
             </Grid>
-            <Grid sx={{pl:4}} size={5}>
+            <Grid sx={{pl:4}} size={4}>
                 {error.msg ? <Typography fontFamily={props.sx.fontFamily} color={error.msg ? 'red' : 'black'}>{error.msg}</Typography> : <div></div>}
             </Grid>
         </>

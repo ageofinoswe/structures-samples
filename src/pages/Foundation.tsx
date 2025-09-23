@@ -201,7 +201,7 @@ function Foundation() {
         const textAnchor: string = 'middle';
         const dominantBaseline: string = 'middle';
         const fontSize: number = 2;
-        const offsetX: number = 0;
+        const offsetX: number = 2;
         const offsetY: number = 2;
 
         const bottomX: number = fdnProps.x + fdnProps.width / 2 ;
@@ -271,8 +271,8 @@ function Foundation() {
             density: fdnDensity,
             weight: fdnWidth * fdnHeight * fdnThickness / 12 * fdnDensity,
             // section modulus
-            sbb: fdnHeight * fdnWidth * fdnWidth / 6,
-            sll: fdnWidth * fdnHeight * fdnHeight / 6
+            S_bb: fdnWidth * fdnHeight * fdnHeight / 6,
+            S_ll: fdnHeight * fdnWidth * fdnWidth / 6
         },
         pointLoad: {
             magnitude: pointLoad.kips,
@@ -293,33 +293,33 @@ function Foundation() {
     // summations for vertical loads (P) and moment + eccentric moments from point load
     const calculationsSums = {
         sumP: calculations.foundation.weight + calculations.pointLoad.magnitude,
-        sumMbb: calculations.pointLoad.mB + calculations.moment.mB,
-        sumMll: calculations.pointLoad.mL + calculations.moment.mL,
+        sumMb: calculations.pointLoad.mB + calculations.moment.mB,
+        sumMl: calculations.pointLoad.mL + calculations.moment.mL,
     }
-    // calculations for a trapezoidal soil bearing pressure
-    // determine the effective width and length as well if a triangular soil bearing pressure is determined
+    // calculations for a trapezoidal foundation bearing pressure
+    // determine the effective width and length as well if a triangular foundation bearing pressure is determined
     const calculationsPressuresTrapezoid = {
         // P/A +/- M/S
-        bb: {
-            qmax: (calculationsSums.sumP) / calculations.foundation.area + (calculationsSums.sumMbb) / calculations.foundation.sbb,
-            qmin: (calculationsSums.sumP) / calculations.foundation.area - (calculationsSums.sumMbb) / calculations.foundation.sbb
+        b: {
+            qmax: (calculationsSums.sumP) / calculations.foundation.area + (Math.abs(calculationsSums.sumMb)) / calculations.foundation.S_ll,
+            qmin: (calculationsSums.sumP) / calculations.foundation.area - (Math.abs(calculationsSums.sumMb)) / calculations.foundation.S_ll
         },
-        ll: {
-            qmax: (calculationsSums.sumP) / calculations.foundation.area + (calculationsSums.sumMll) / calculations.foundation.sll,
-            qmin: (calculationsSums.sumP) / calculations.foundation.area - (calculationsSums.sumMll) / calculations.foundation.sll
+        l: {
+            qmax: (calculationsSums.sumP) / calculations.foundation.area + (Math.abs(calculationsSums.sumMl)) / calculations.foundation.S_bb,
+            qmin: (calculationsSums.sumP) / calculations.foundation.area - (Math.abs(calculationsSums.sumMl)) / calculations.foundation.S_bb
         },
         // 3 * (x/2 - M / sumP)
-        beff: eccentricityDirection === 'L' ? calculations.foundation.width : 3*(calculations.foundation.width/2 - (Math.abs(calculationsSums.sumMbb))/(calculationsSums.sumP)),
-        leff: eccentricityDirection === 'B' ? calculations.foundation.height : 3*(calculations.foundation.height/2 - (Math.abs(calculationsSums.sumMll))/(calculationsSums.sumP)),
+        beff: eccentricityDirection === 'L' ? calculations.foundation.width : 3*(calculations.foundation.width/2 - (Math.abs(calculationsSums.sumMb))/(calculationsSums.sumP)),
+        leff: eccentricityDirection === 'B' ? calculations.foundation.height : 3*(calculations.foundation.height/2 - (Math.abs(calculationsSums.sumMl))/(calculationsSums.sumP)),
     }
-    // calculations for a triangular soil bearing pressure, using the previously calculated efftive width and length
+    // calculations for a triangular foundation bearing pressure, using the previously calculated efftive width and length
     const calculationsPressuresTriangular = {
         // 2*sumP / (Leff * Beff)
-        bb: {
+        b: {
             qmax: 2*calculationsSums.sumP / (calculations.foundation.height * calculationsPressuresTrapezoid.beff),
             qmin: 0,
         },
-        ll: {
+        l: {
             qmax: 2*calculationsSums.sumP / (calculations.foundation.width * calculationsPressuresTrapezoid.leff),
             qmin: 0,
         }
@@ -432,6 +432,8 @@ function Foundation() {
                             <CenterAxis foundationProps={foundationPropsPlan}></CenterAxis>
                             <OriginAxis origin={planOrigin}></OriginAxis>
                             <text {...labelLocationsPlan.title}>Foundation Plan</text>
+                            <text {...labelLocationsPlan.bottom}>{fdnWidth} ft</text>
+                            <text {...labelLocationsPlan.perp}>{fdnHeight} ft</text>
                             <PointLoadPlan x={planOrigin[0] + pointLoad.coordB + fdnCenter[0]} y={planOrigin[1] - pointLoad.coordL - fdnCenter[1]} magnitude={pointLoad.kips}/>
                             <MomentPlan x={planOrigin[0] + moment.coordB + fdnCenter[0]} y={planOrigin[1] - moment.coordL - fdnCenter[1]} magnitude={moment.kipft} along={eccentricityDirection}/>
                         </svg>
@@ -441,6 +443,8 @@ function Foundation() {
                             <CenterAxis foundationProps={foundationPropsPlanRotated}></CenterAxis>
                             <OriginAxis origin={planRotatedOrigin} rotate={true}></OriginAxis>
                             <text {...labelLocationsPlanRotated.title}>Foundation Plan</text>
+                            <text {...labelLocationsPlanRotated.bottom}>{fdnHeight} ft</text>
+                            <text {...labelLocationsPlanRotated.perp}>{fdnWidth} ft</text>
                             <PointLoadPlan x={planRotatedOrigin[0] + pointLoad.coordL + fdnCenter[1]} y={planRotatedOrigin[1] + pointLoad.coordB + fdnCenter[0]} magnitude={pointLoad.kips}/>
                             <MomentPlan x={planRotatedOrigin[0] + moment.coordL + fdnCenter[1]} y={planRotatedOrigin[1] + moment.coordB + fdnCenter[0]} magnitude={moment.kipft} along={eccentricityDirection} rotate={true}/>
                         </svg>
@@ -465,9 +469,9 @@ function Foundation() {
                             <text {...labelLocationsSectionRotated.bottom}>L-L</text>
                             <text {...labelLocationsSectionRotated.perp}>t</text>
                             <text {...labelLocationsSectionRotated.title}>Foundation Section</text>
-                            <PointLoadSection x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                            <PointLoadSection x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[1]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
                             {/* only render the moment if it is in-plane */}
-                            {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[0]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                            {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[1]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
                         </svg>
                     </Box>
 
@@ -486,97 +490,75 @@ function Foundation() {
                         <CalculationLine name="length" variable="L" value={calculations.foundation.height} units='ft'/>
                         <CalculationLine name="thickness" variable="t" value={calculations.foundation.thickness} units='in'/>
                         <CalculationLine name="density" variable={'\u03B3'} value={calculations.foundation.density} units='kcf'/>
-                        <CalculationLine name="weight" variable="w" value={calculations.foundation.weight} units='kips' formula={`B * L * t * ${'\u03B3'}`}/>
+                        <CalculationLine name="weight" variable="w" value={calculations.foundation.weight} units='kips' formula={`B * L * (t / 12) * ${'\u03B3'}`}/>
                     </Grid>
                     {/* calcs: point load */}
                     <Typography {...calcProps}>Applied Point Load</Typography>
                     <Grid container>
                         <CalculationHeader/>
                         <CalculationLine name="point load" variable="P" value={calculations.pointLoad.magnitude} units='kips'/>
-                        <CalculationLine name="ecc. along B" variable="Ep_b" value={calculations.pointLoad.eB} units='ft'/>
-                        <CalculationLine name="ecc. along L" variable="Ep_l" value={calculations.pointLoad.eL} units='ft'/>
-                        <CalculationLine name="ecc. moment along B" variable="EMp_b" value={calculations.pointLoad.mB} units='kip-ft' formula='P * Ep_b'/>
-                        <CalculationLine name="ecc. moment along L" variable="EMp_l" value={calculations.pointLoad.mL} units='kip-ft' formula='P * Ep_l'/>
+                        <CalculationLine name="ecc. along B" variable="P_eb" value={calculations.pointLoad.eB} units='ft'/>
+                        <CalculationLine name="ecc. along L" variable="P_el" value={calculations.pointLoad.eL} units='ft'/>
+                        <CalculationLine name="ecc. moment along B" variable="P_mb" value={calculations.pointLoad.mB} units='kip-ft' formula='P * P_eb'/>
+                        <CalculationLine name="ecc. moment along L" variable="P_ml" value={calculations.pointLoad.mL} units='kip-ft' formula='P * P_el'/>
                     </Grid>
                     {/* calcs: moment */}
                     <Typography {...calcProps}>Applied Moment</Typography>
                     <Grid container>
                         <CalculationHeader/>
-                        <CalculationLine name="moment" variable="M_b" value={calculations.moment.mB} units='kip-ft'/>
-                        <CalculationLine name="moment" variable="M_l" value={calculations.moment.mL} units='kip-ft'/>
+                        <CalculationLine name="moment along B" variable="M_b" value={calculations.moment.mB} units='kip-ft'/>
+                        <CalculationLine name="moment along L" variable="M_l" value={calculations.moment.mL} units='kip-ft'/>
                         <CalculationLine name="along" variable={calculations.moment.along} value={'-'} units='-'/>
-                        <CalculationLine name="ecc. along B" variable="Em_b" value={calculations.moment.eB} units='ft'/>
-                        <CalculationLine name="ecc. along L" variable="Em_l" value={calculations.moment.eL} units='ft'/>
+                        <CalculationLine name="ecc. along B" variable="M_eb" value={calculations.moment.eB} units='ft'/>
+                        <CalculationLine name="ecc. along L" variable="M_el" value={calculations.moment.eL} units='ft'/>
                     </Grid>
                     {/* calcs: summations */}
                     <Typography {...calcProps}>Summations</Typography>
                     <Grid container>
                         <CalculationHeader/>
-                        <CalculationLine name="sum vertical load" variable="Pt" value={calculationsSums.sumP} units='kips' formula='w + P'/>
-                        <CalculationLine name="sum moment along B" variable="Mt_bb" value={calculationsSums.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
-                        <CalculationLine name="sum moment along L" variable="Mt_ll" value={calculationsSums.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
+                        <CalculationLine name="sum vertical load" variable="Pv" value={calculationsSums.sumP} units='kips' formula='w + P'/>
+                        <CalculationLine name="sum moment along B" variable="Mt_b" value={calculationsSums.sumMb} units='kip-ft' formula={'P_mb + M_b'}/>
+                        <CalculationLine name="sum moment along L" variable="Mt_l" value={calculationsSums.sumMl} units='kip-ft' formula={'P_ml + M_l'}/>
                     </Grid>
-                    {/* calcs: soil bearing pressures */}
-                    <Typography {...calcProps}>Soil Bearing Pressures</Typography>
+                    {/* calcs: foundation bearing pressures */}
+                    <Typography {...calcProps}>foundation bearing Pressures</Typography>
                     <Grid container>
                         <CalculationHeader/>
-                        <CalculationLine name="sum vertical load" variable="Pt" value={calculationsSums.sumP} units='kips' formula='w + P'/>
+                        <CalculationLine name="sum vertical load" variable="Pv" value={calculationsSums.sumP} units='kips' formula='w + P'/>
                         <CalculationLine name="foundation area" variable="A" value={calculations.foundation.area} units='ft^2' formula='B * L'/>
-                        <CalculationLine name="moment along B" variable="Mt_bb" value={calculationsSums.sumMbb} units='kip-ft' formula={'EMp_b + M_b'}/>
-                        <CalculationLine name="moment along L" variable="Mt_ll" value={calculationsSums.sumMll} units='kip-ft' formula={'EMp_l + M_l'}/>
-                        <CalculationLine name="section modulus about BB" variable="Sbb" value={calculations.foundation.sbb} units='ft^3' formula='L * B^2 / 6'/>
-                        <CalculationLine name="section modulus about LL" variable="Sll" value={calculations.foundation.sll} units='ft^3' formula='L^2 * B / 6'/>
-                        <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsSums.sumP) / calculations.foundation.area} units='ksf' formula='Pt / A'/>
-                        <CalculationLine name="moment stress along B" variable="q_bb" value={(calculationsSums.sumMbb) / calculations.foundation.sbb} units='ksf' formula='Mt_bb / Sbb'/>
-                        <CalculationLine name="moment stress along L" variable="q_ll" value={(calculationsSums.sumMll) / calculations.foundation.sll} units='ksf' formula='Mt_ll / Sll'/>
-                        {/* trapezoidal soil bearing distribution */}
-                        {calculationsPressuresTrapezoid.bb.qmax > calculationsPressuresTrapezoid.bb.qmin ?
-                            <>
-                                {/* P/A + M/S is the max */} 
-                                <CalculationLine name="q max along B" variable="qbb_max" value={calculationsPressuresTrapezoid.bb.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0)? 'NG, uplift' : ''}}/>
-                                <CalculationLine name="q min along B" variable="qbb_min" value={calculationsPressuresTrapezoid.bb.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
-                            </>
-                                :
-                            <>
-                                {/* P/A - M/S is the max */} 
-                                <CalculationLine name="q max along B" variable="qbb_max" value={calculationsPressuresTrapezoid.bb.qmin} units='ksf' formula='Pt/A - (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
-                                <CalculationLine name="q min along B" variable="qbb_min" value={calculationsPressuresTrapezoid.bb.qmax} units='ksf' formula='Pt/A + (Mt_bb / Sbb)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0) ? 'NG, uplift' : ''}}/>
-                            </>
-                        }
-                        {calculationsPressuresTrapezoid.ll.qmax > calculationsPressuresTrapezoid.ll.qmin ?
-                            <>
-                                {/* P/A + M/S is the max */} 
-                                <CalculationLine name="q max along L" variable="qll_max" value={calculationsPressuresTrapezoid.ll.qmax} units='ksf' formula='Pt/A + (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0)? 'NG, uplift' : ''}}/>
-                                <CalculationLine name="q min along L" variable="qll_min" value={calculationsPressuresTrapezoid.ll.qmin} units='ksf' formula='Pt/A - (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0) ? 'NG, uplift' : ''}}/>
-                            </>
-                                :
-                            <>
-                                {/* P/A - M/S is the max */} 
-                                <CalculationLine name="q max along L" variable="qll_max" value={calculationsPressuresTrapezoid.ll.qmin} units='ksf' formula='Pt/A - (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0) ? 'NG, uplift' : ''}}/>
-                                <CalculationLine name="q min along L" variable="qll_min" value={calculationsPressuresTrapezoid.ll.qmax} units='ksf' formula='Pt/A + (Mt_ll / Sll)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0) ? 'NG, uplift' : ''}}/>
-                            </>
-                        }
-                        {/* triangular soil bearing distribution if any of the trapezoidal soil bearing distributions are < 0*/}
-                        {(calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0 || calculationsPressuresTrapezoid.ll.qmax < 0)
+                        <CalculationLine name="moment along B" variable="Mt_b" value={calculationsSums.sumMb} units='kip-ft' formula={'P_mb + M_b'}/>
+                        <CalculationLine name="moment along L" variable="Mt_l" value={calculationsSums.sumMl} units='kip-ft' formula={'P_ml + M_l'}/>
+                        <CalculationLine name="section modulus about BB" variable="S_bb" value={calculations.foundation.S_bb} units='ft^3' formula='B * L^2 / 6'/>
+                        <CalculationLine name="section modulus about LL" variable="S_ll" value={calculations.foundation.S_ll} units='ft^3' formula='L * B^2 / 6'/>
+                        <CalculationLine name="vertical pressure" variable="q_v" value={(calculationsSums.sumP) / calculations.foundation.area} units='ksf' formula='Pv / A'/>
+                        <CalculationLine name="moment stress about BB" variable="q_bb" value={(Math.abs(calculationsSums.sumMl)) / calculations.foundation.S_bb} units='ksf' formula='Mt_l / S_bb'/>
+                        <CalculationLine name="moment stress about LL" variable="q_ll" value={Math.abs((calculationsSums.sumMb)) / calculations.foundation.S_ll} units='ksf' formula='Mt_b / S_ll'/>
+                        {/* trapezoidal foundation bearing distribution */}
+                        <CalculationLine name="q max along B" variable="qb_max" value={calculationsPressuresTrapezoid.b.qmax} units='ksf' formula='Pv/A + (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0)? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q min along B" variable="qb_min" value={calculationsPressuresTrapezoid.b.qmin} units='ksf' formula='Pv/A - (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q max along L" variable="ql_max" value={calculationsPressuresTrapezoid.l.qmax} units='ksf' formula='Pv/A + (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0)? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q min along L" variable="ql_min" value={calculationsPressuresTrapezoid.l.qmin} units='ksf' formula='Pv/A - (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        {/* triangular foundation bearing distribution if any of the trapezoidal foundation bearing distributions are < 0*/}
+                        {(calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0 || calculationsPressuresTrapezoid.l.qmax < 0)
                             &&
                             <>
                                 <Grid size={12}>
-                                    <Typography>Using triangular soil bearing distribution...</Typography>
+                                    <Typography>...Using triangular foundation bearing distribution...</Typography>
                                 </Grid>
-                                <CalculationLine name="effective width" variable="Beff" value={calculationsPressuresTrapezoid.beff} units='ft' formula='3 * (B / 2 - |Mt_bb| / Pt)'/>
-                                <CalculationLine name="effective length" variable="Leff" value={calculationsPressuresTrapezoid.leff} units='ft' formula='3 * (L / 2 - |Mt_ll| / Pt)'/>
-                                <CalculationLine name="q max BB along B" variable="qbb_max" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.bb.qmax : '-'} units='ksf' formula='(2 * Pt) / (L * Beff)' highlight={eccentricityDirection==='B'}/>
-                                <CalculationLine name="q min BB along B" variable="qbb_min" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.bb.qmin : '-'} units='ksf' highlight={eccentricityDirection==='B'}/>
-                                <CalculationLine name="q max LL along L" variable="qll_max" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.ll.qmax : '-'} units='ksf' formula='(2 * Pt) / (B * Leff)' highlight={eccentricityDirection==='L'}/>
-                                <CalculationLine name="q min LL along L" variable="qll_min" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.ll.qmin : '-'} units='ksf' highlight={eccentricityDirection==='L'}/>
+                                <CalculationLine name="effective width" variable="Beff" value={calculationsPressuresTrapezoid.beff} units='ft' formula={`3 * (B / 2 - |Mt_b| / Pv) ${'\u2264'} B`}/>
+                                <CalculationLine name="effective length" variable="Leff" value={calculationsPressuresTrapezoid.leff} units='ft' formula={`3 * (L / 2 - |Mt_l| / Pv) ${'\u2264'} L`}/>
+                                <CalculationLine name="q max BB along B" variable="qb_max" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.b.qmax : '-'} units='ksf' formula='(2 * Pv) / (L * Beff)' highlight={eccentricityDirection==='B'}/>
+                                <CalculationLine name="q min BB along B" variable="qb_min" value={eccentricityDirection === 'B' ? calculationsPressuresTriangular.b.qmin : '-'} units='ksf' highlight={eccentricityDirection==='B'}/>
+                                <CalculationLine name="q max LL along L" variable="ql_max" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.l.qmax : '-'} units='ksf' formula='(2 * Pv) / (B * Leff)' highlight={eccentricityDirection==='L'}/>
+                                <CalculationLine name="q min LL along L" variable="ql_min" value={eccentricityDirection === 'L' ? calculationsPressuresTriangular.l.qmin : '-'} units='ksf' highlight={eccentricityDirection==='L'}/>
                             </>
                         }
                     </Grid>
 
-                    {/* draw the resulting soil bearing distributions under the foundation sections */}
-                    <Typography {...calcProps}>Resulting Soil Bearing Pressures</Typography>
+                    {/* draw the resulting foundation bearing distributions under the foundation sections */}
+                    <Typography {...calcProps}>Resulting Foundation Bearing Pressures</Typography>
                     <Box display='flex' sx={{justifyContent: 'center'}}>
-                        {/* foundation section soil bearing pressure: B-B */}
+                        {/* foundation section foundation bearing pressure: B-B */}
                         <svg {...SvgProps}>
                             {/* redraw foundation section */}
                             <rect {...(foundationPropsSection)}/>
@@ -585,48 +567,52 @@ function Foundation() {
                             <PointLoadSection x={sectionOrigin[0] + pointLoad.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
                             {eccentricityDirection === 'B' && <MomentSection x={sectionOrigin[0] + moment.coordB + fdnCenter[0]} y={sectionOrigin[1]} magnitude={moment.kipft}/>}
                             <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>B-B</text>
-                            {/* if soil pressure is >= 0, trapezoidal soil bearing distribution */}
-                            {(calculationsPressuresTrapezoid.bb.qmin >= 0 && calculationsPressuresTrapezoid.bb.qmax >= 0)
+                            {/* if soil pressure is >= 0, trapezoidal foundation bearing distribution */}
+                            {(calculationsPressuresTrapezoid.b.qmin >= 0)
                                 &&
                                 <SoilBearingPressure
                                     foundationProps={foundationPropsSection}
-                                    qLeft={calculationsPressuresTrapezoid.bb.qmin}
-                                    qRight={calculationsPressuresTrapezoid.bb.qmax}
-                                    shape={{type: 'trapezoidal'}}/>}
-                            {/* if soil pressure is < 0, triangular soil bearing distribution */}
-                            {(calculationsPressuresTrapezoid.bb.qmin < 0 || calculationsPressuresTrapezoid.bb.qmax < 0)
+                                    qLeft={calculationsPressuresTrapezoid.b.qmin}
+                                    qRight={calculationsPressuresTrapezoid.b.qmax}
+                                    shape={{type: 'trapezoidal'}}
+                                    reverse={calculationsSums.sumMb < 0 ? true : false}/>}
+                            {/* if soil pressure is < 0, triangular foundation bearing distribution */}
+                            {(calculationsPressuresTrapezoid.b.qmin < 0)
                                 &&
                                 <SoilBearingPressure
                                     foundationProps={foundationPropsSection}
-                                    qLeft={calculationsPressuresTriangular.bb.qmin}
-                                    qRight={calculationsPressuresTriangular.bb.qmax}
-                                    shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.beff, reverse: calculationsSums.sumMbb < 0 ? true : false}}/>}
-                            </svg>
-                        {/* foundation section soil bearing pressure: L-L */}
+                                    qLeft={calculationsPressuresTriangular.b.qmin}
+                                    qRight={calculationsPressuresTriangular.b.qmax}
+                                    shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.beff}}
+                                    reverse={calculationsSums.sumMb < 0 ? true : false}/>}
+                        </svg>
+                        {/* foundation section foundation bearing pressure: L-L */}
                         <svg {...SvgProps}>
                             {/* redraw foundation section rotated */}
                             <rect {...(foundationPropsSectionRotated)}/>
                             <text {...labelLocationsSectionRotated.perp}>t</text>
                             <Grade foundationProps={foundationPropsSectionRotated}></Grade>
-                            <PointLoadSection x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[0]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
-                            {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[0]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
+                            <PointLoadSection x={sectionRotatedOrigin[0] + pointLoad.coordL + fdnCenter[1]} y={sectionOrigin[1]} magnitude={pointLoad.kips}/>
+                            {eccentricityDirection === 'L' && <MomentSection x={sectionRotatedOrigin[0] + moment.coordL + fdnCenter[1]} y={sectionRotatedOrigin[1]} magnitude={moment.kipft}/>}
                             <text {...{...labelLocationsSection.title, y:labelLocationsSection.title.y-10}}>L-L</text>
-                            {/* if soil pressure is >= 0, trapezoidal soil bearing distribution */}
-                            {(calculationsPressuresTrapezoid.ll.qmin >= 0 && calculationsPressuresTrapezoid.ll.qmax >= 0)
+                            {/* if soil pressure is >= 0, trapezoidal foundation bearing distribution */}
+                            {(calculationsPressuresTrapezoid.l.qmin >= 0 && calculationsPressuresTrapezoid.l.qmax >= 0)
                                 && 
                                 <SoilBearingPressure
                                     foundationProps={foundationPropsSectionRotated}
-                                    qLeft={calculationsPressuresTrapezoid.ll.qmin}
-                                    qRight={calculationsPressuresTrapezoid.ll.qmax}
-                                    shape={{type: 'trapezoidal'}}/>}
-                            {/* if soil pressure is < 0, triangular soil bearing distribution */}
-                            {(calculationsPressuresTrapezoid.ll.qmin < 0 || calculationsPressuresTrapezoid.ll.qmax < 0)
+                                    qLeft={calculationsPressuresTrapezoid.l.qmin}
+                                    qRight={calculationsPressuresTrapezoid.l.qmax}
+                                    shape={{type: 'trapezoidal'}}
+                                    reverse={calculationsSums.sumMl < 0 ? true : false}/>}
+                            {/* if soil pressure is < 0, triangular foundation bearing distribution */}
+                            {(calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0)
                                 &&
                                 <SoilBearingPressure
                                     foundationProps={foundationPropsSectionRotated}
-                                    qLeft={calculationsPressuresTriangular.ll.qmin}
-                                    qRight={calculationsPressuresTriangular.ll.qmax}
-                                    shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.leff, reverse: calculationsSums.sumMll < 0 ? true : false}}/>}
+                                    qLeft={calculationsPressuresTriangular.l.qmin}
+                                    qRight={calculationsPressuresTriangular.l.qmax}
+                                    shape={{type: 'triangular', effectiveWidth: calculationsPressuresTrapezoid.leff}}
+                                    reverse={calculationsSums.sumMl < 0 ? true : false}/>}
                         </svg>
                     </Box>
                 </>

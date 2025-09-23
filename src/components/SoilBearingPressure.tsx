@@ -1,17 +1,17 @@
-// draws the soil bearing pressure under a foundation section
+// draws the foundation bearing pressure under a foundation section
 
-// pressure props interfaces requires the foundation properties, the soil bearing pressures, and the shape
+// pressure props interfaces requires the foundation properties, the foundation bearing pressures, and the shape
 interface PressureProps {
     foundationProps: SvgRectProps,
     qLeft: number,
     qRight: number,
     shape: Triangular | Trapezoidal
+    reverse?: boolean,
 }
-// triangular interface requires the type, an effective width, and direction/'reverse' (0 soil bearing on the left, or 0 soil bearing on the right)
+// triangular interface requires the type, an effective width, and direction/'reverse' (0 foundation bearing on the left, or 0 foundation bearing on the right)
 interface Triangular {
     type: 'triangular'
     effectiveWidth: number;
-    reverse?: boolean,
 }
 // trapezoidal interface requires the type only
 interface Trapezoidal {
@@ -28,20 +28,20 @@ interface SvgRectProps {
     'strokeWidth': number
 }
 
-function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureProps) {
+function SoilBearingPressure({foundationProps, qLeft, qRight, shape, reverse}:  PressureProps) {
     // define the svg properies
     const pathProps = {
         fill: '#3f8b50ff',
         stroke: 'black',
         'strokeWidth': 0.1,
     };
-    // scales the maximum soil bearing pressure to the viewbox height of the svg, then scaled down to fit appropriately on screen
+    // scales the maximum foundation bearing pressure to the viewbox height of the svg, then scaled down to fit appropriately on screen
     const scale: (pressure: number) => number = (pressure) => {
         const scaleFactor = 4;
         return pressure * (foundationProps.y / (qLeft > qRight ? qLeft : qRight)) / scaleFactor;
     }
 
-    // soil bearing pressure coordinates
+    // foundation bearing pressure coordinates
     let originX: number;
     let originY: number;
     // begin at start coordinate
@@ -53,7 +53,7 @@ function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureP
     // draw line to end coordinate
     let end: [number, number];
 
-    // trapezoidal soil bearing pressure
+    // trapezoidal foundation bearing pressure
     if(shape.type === 'trapezoidal'){
         // determine the origin/start coordinate
         originX = foundationProps.x;
@@ -66,10 +66,10 @@ function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureP
         // determine the end coordiante (end of foundation)
         end = [originX + foundationProps.width, originY];
         // if q1 is greater than q2, reverse the trapezoidal bearing pressure
-        if(q1[1] > q2[1])
-            [start, q1, q2, end] = [end, q2, q1, start] 
+        if(reverse ?? false)
+            [q1[1], q2[1]] = [q2[1], q1[1]] 
     }
-    // triangulare soil bearing pressure
+    // triangular foundation bearing pressure
     else{
         // determine the origin/start coordinate
         originX = foundationProps.x + (foundationProps.width - shape.effectiveWidth);
@@ -82,7 +82,7 @@ function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureP
         // determine the end coordinate (end of effective width/length)
         end = [originX + shape.effectiveWidth, originY];
         // if the triangular distribution is reversed/mirrored, determine new coordinates by swapping q1 and q2
-        if(shape.reverse ?? false){
+        if(reverse ?? false){
             // recalculate the origin/start coordinates
             originX = foundationProps.x;
             originY = foundationProps.y + foundationProps.height;
@@ -96,33 +96,34 @@ function SoilBearingPressure({foundationProps, qLeft, qRight, shape}:  PressureP
         }
     }
 
-    // draw soil bearing pressure svg
+    // draw foundation bearing pressure svg
     const soilBearingPressureDrawing =  `M ${start[0]},${start[1]}
                                         L ${q1[0]},${q1[1]}
                                         L ${q2[0]},${q2[1]}
                                         L ${end[0]},${end[1]}`
+                                        
     return (
         <>
-        {/* triangular soil bearing pressures and annotations */}
+        {/* triangular foundation bearing pressures and annotations */}
             {<path d={soilBearingPressureDrawing} {...pathProps}/>}
-            {(shape.type === 'triangular' && (shape.reverse ?? false))
+            {(shape.type === 'triangular' && (reverse ?? false))
                 &&  <>  {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                         {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                     </>
             }   
-            {(shape.type === 'triangular' && !(shape.reverse ?? false))
+            {(shape.type === 'triangular' && !(reverse ?? false))
                 &&  <>  {<text x={q1[0] - 3} y={q1[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                         {<text x={q2[0]} y={q2[1] + 3} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                     </>
             }
-            {/* trapezoidal soil bearing pressures and annotations */}
-            {(shape.type === 'trapezoidal' && qLeft <= qRight) 
+            {/* trapezoidal foundation bearing pressures and annotations */}
+            {(shape.type === 'trapezoidal' && !(reverse ?? false)) 
                 &&  <>
                         {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
                         {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                     </>
             }
-            {(shape.type === 'trapezoidal' && qLeft > qRight) 
+            {(shape.type === 'trapezoidal' && (reverse ?? false)) 
                 &&  <>
                         {<text x={q1[0]} y={q1[1] + 2} fontSize={1.5}>{Math.round(qRight*1000)} psf</text>}
                         {<text x={q2[0]} y={q2[1] + 2} fontSize={1.5}>{Math.round(qLeft*1000)} psf</text>}
