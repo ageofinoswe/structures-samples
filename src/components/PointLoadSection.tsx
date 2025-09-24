@@ -5,14 +5,21 @@
 //   |     |
 //  \*/    |
 //   `
+// rotate allows for 90 degree transformation
+//                          \
+//         ------------------}
+//                          /
+//
+
 
 interface ArrowProps {
     x: number,
     y: number,
     magnitude: number,
+    rotate? : boolean,
 };
 
-function Arrow({x, y, magnitude}: ArrowProps) {
+function Arrow({x, y, magnitude, rotate=false}: ArrowProps) {
     // determine the direction and define the svg props
     const arrowDown = magnitude >= 0 ? true : false;
     const arrowProps = {
@@ -22,10 +29,10 @@ function Arrow({x, y, magnitude}: ArrowProps) {
     };
     const arrowLength = 8;
     const arrowLine = {
-        x1: x,
-        y1: y,
-        x2: x,
-        y2: y - arrowLength,
+        x1: rotate ? y : x,
+        y1: rotate ? x : y,
+        x2: rotate ? y - arrowLength : x,
+        y2: rotate ? x : y - arrowLength,
     }
     const arrowHeadLength = .75;
     
@@ -34,16 +41,20 @@ function Arrow({x, y, magnitude}: ArrowProps) {
                             L ${x - arrowHeadLength},${y - arrowHeadLength}
                             M ${x},${y}
                             L ${x + arrowHeadLength}, ${y - arrowHeadLength}`
-    const arrowHeadUp =   `M ${x},${y - arrowLength}
+    const arrowHeadUp =     `M ${x},${y - arrowLength}
                             L ${x - arrowHeadLength},${y - arrowLength + arrowHeadLength}
                             M ${x},${y - arrowLength}
                             L ${x + arrowHeadLength}, ${y - arrowLength + arrowHeadLength}`
+    const arrowHeadRotated =    `M ${y},${x}
+                                L ${y - arrowHeadLength},${x + arrowHeadLength}
+                                M ${y},${x}
+                                L ${y - arrowHeadLength}, ${x - arrowHeadLength}`
                             
     return (
         <>
             <line {...arrowLine} {...arrowProps}></line>
-            <path d={arrowDown ? arrowHeadDown : arrowHeadUp} {...arrowProps}></path>
-            <text textAnchor='middle' fontSize={1.5} x={x} y={y - arrowLength - 1}>{magnitude} kips</text>
+            <path d={arrowDown ? (rotate ? arrowHeadRotated : arrowHeadDown) : arrowHeadUp} {...arrowProps}></path>
+            <text textAnchor='middle' fontSize={1.5} x={rotate ? y - arrowLength - 3 : x} y={ rotate ? x : y - arrowLength - 1}>{magnitude} kips</text>
         </>
     )
 }
