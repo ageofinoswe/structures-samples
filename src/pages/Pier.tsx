@@ -53,23 +53,41 @@ function Pier() {
     // STATE HANDLERS
     // updates point load and height applied
     const handlePointLoad: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setPointLoad(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setPointLoad(event.target.value);
+        else
+            setPointLoad('0');
     }
     const handleHeight: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setHeight(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setHeight(event.target.value);
+        else
+            setHeight('0');
     }
     // updates pier diameter, depth,  and allowable pressures
     const handleDiameter: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setDiameter(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setDiameter(event.target.value);
+        else
+            setDiameter('0');
     }
     const handleDepth: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setDepth(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setDepth(event.target.value);
+        else
+            setDepth('0');    
     }
     const handlePassivePressure: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setPassivePressure(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setPassivePressure(event.target.value);
+        else
+            setPassivePressure('0');    
     }
     const handleMaxPressure: (event: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
-        setMaxPressure(event.target.value);
+        if(!isNaN(parseInt(event.target.value)))
+            setMaxPressure(event.target.value);
+        else
+            setMaxPressure('0');    
     }
 
     // CONSTANTS
@@ -112,16 +130,17 @@ function Pier() {
     // this will center the rectangle svg within the viewbox
     const pierProps: (svgProps: SvgProps) => {lever: SvgRectProps, pierSection: SvgRectProps} = (svgProps) => {
         const viewBox: number[] = svgProps.viewBox.split(' ').map( (index: string) => Number.parseInt(index));
+        const offsetY = 3;
         const viewBoxWidth: number = viewBox[2];
-        const viewBoxHeight: number = viewBox[3];
-
-        const totalHeight: number = (!isNaN(parseInt(height)) && !isNaN(parseInt(depth))) ? parseInt(height) * 12 + parseInt(depth) : 0;
+        const viewBoxHeight: number = viewBox[3] - 2 * offsetY;
+        
+        const totalHeight: number = parseInt(height) * 12 + parseInt(depth);
         const scaleFactor = 0.95;
 
-        const leverWidth: number = 2;
-        const leverHeight: number = (!isNaN(parseInt(height)) && totalHeight) ? (parseInt(height) * 12 / totalHeight) * viewBoxHeight * scaleFactor: 0;
+        const leverWidth: number = (2 / totalHeight) * viewBoxHeight * scaleFactor;
+        const leverHeight: number = parseInt(height) === 0 ? 3 : (parseInt(height) * 12 / totalHeight) * viewBoxHeight * scaleFactor;
         const leverCoordX: number = ((viewBoxWidth - leverWidth) / 2);
-        const leverCoordY: number = 2;
+        const leverCoordY: number = offsetY;
         const lever: SvgRectProps = {
             x: leverCoordX,
             y: leverCoordY,
@@ -132,10 +151,10 @@ function Pier() {
             'strokeWidth': 0.1
         }; 
 
-        const rectWidth: number = !isNaN(parseInt(diameter)) ? parseInt(diameter) : 0;
-        const rectHeight: number = (!isNaN(parseInt(depth)) && totalHeight) ? (parseInt(depth) / totalHeight) * viewBoxHeight * scaleFactor : 0;
+        const rectWidth: number = (parseInt(diameter) / totalHeight) * viewBoxHeight * scaleFactor;
+        const rectHeight: number = (parseInt(depth) / totalHeight) * viewBoxHeight * scaleFactor;
         const coordX: number = ((viewBoxWidth - rectWidth) / 2);
-        const coordY: number = leverHeight;
+        const coordY: number = leverHeight + offsetY;
         const pierSection: SvgRectProps = {
             x: coordX,
             y: coordY,
@@ -169,13 +188,23 @@ function Pier() {
         </Grid>
         <Grid size={5}>
             <svg {...SvgProps}>
+                {parseInt(diameter) > 0
+                    &&
+                    <>
+                        <Grade foundationProps={(pierProps(SvgProps).pierSection)}></Grade>
+                        <text {...labelLocationsPier.bottom}>{diameter} in</text>
+                        <text {...labelLocationsPier.perp}>{parseInt(depth)/12} ft</text>
+                        <rect {...(pierProps(SvgProps).pierSection)}></rect>
+                    </>
+                    }
                 <rect {...(pierProps(SvgProps).lever)}></rect>
-                <rect {...(pierProps(SvgProps).pierSection)}></rect>
-                <Grade foundationProps={(pierProps(SvgProps).pierSection)}></Grade>
-                <text {...labelLocationsPier.bottom}>{diameter} in</text>
-                <text {...labelLocationsPier.perp}>{parseInt(depth)/12} ft</text>
                 <text {...labelLocationsLever.perp}>{height} ft</text>
-                <PointLoadSection x={(pierProps(SvgProps).lever.y)} y={(pierProps(SvgProps).lever.x)} magnitude={parseInt(pointLoad)} rotate={true}></PointLoadSection>
+                {parseInt(pointLoad) > 0
+                    && 
+                    <>
+                        <PointLoadSection x={(pierProps(SvgProps).lever.y)} y={(pierProps(SvgProps).lever.x)} magnitude={parseInt(pointLoad)} rotate={true}></PointLoadSection>
+                    </>
+                }
             </svg>
         </Grid>
         <Grid size={5}>

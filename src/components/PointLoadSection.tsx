@@ -54,7 +54,7 @@ function Arrow({x, y, magnitude, rotate=false}: ArrowProps) {
         <>
             <line {...arrowLine} {...arrowProps}></line>
             <path d={arrowDown ? (rotate ? arrowHeadRotated : arrowHeadDown) : arrowHeadUp} {...arrowProps}></path>
-            <text textAnchor='middle' fontSize={1.5} x={rotate ? y - arrowLength - 3 : x} y={ rotate ? x : y - arrowLength - 1}>{magnitude} kips</text>
+            <text textAnchor='middle' fontSize={2} x={rotate ? y - arrowLength - 6 : x} y={ rotate ? x : y - arrowLength - 1}>{magnitude} kips</text>
         </>
     )
 }
