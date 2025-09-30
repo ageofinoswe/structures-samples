@@ -1,10 +1,14 @@
 import { AppBar, Box, Stack, Tab, Tabs, Toolbar, Typography } from "@mui/material"
 import React from "react"
 import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom'
 
 function Navbar() {
+    const path = useLocation().pathname.split('/');
+    const tab = path[path.length - 1] === '' ? 'foundation' : path[path.length - 1];
+
     /* sets which tab is active */
-    const [value, setValue] = React.useState('one');
+    const [value, setValue] = React.useState(tab);
 
     /* changes tab state */
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -38,8 +42,8 @@ function Navbar() {
                     </Stack>
                     <Box sx={{ justifyItems: 'center', flexGrow: 1 }}>
                         <Tabs sx={tabStyle} value={value} onChange={handleChange}>
-                            <Tab sx={tabStyle} value='one' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
-                            <Tab sx={tabStyle} value='two' component={Link} to='/pier' label='Pier Foundation Depth'/>
+                            <Tab sx={tabStyle} value='foundation' component={Link} to='/foundation' label='Foundation Bearing Pressure'/>
+                            <Tab sx={tabStyle} value='pier' component={Link} to='/pier' label='Pier Foundation Depth'/>
                         </Tabs>
                     </Box>
                 </Toolbar>

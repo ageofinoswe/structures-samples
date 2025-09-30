@@ -14,10 +14,11 @@ interface CalcLine {
     units: string,
     formula?: string,
     highlight?: boolean,
-    error?: {msg?: string},
+    message?: {msg?: string},
+    error?: boolean,
 }
 
-function CalculationLine({name, variable, value, units, formula='-', highlight=false, error={}}: CalcLine) {
+function CalculationLine({name, variable, value, units, formula='-', highlight=false, message={}, error=false}: CalcLine) {
     const props = {
         sx: {fontFamily: 'Courier New', backgroundColor: highlight ? 'yellow' : 'none'
         }
@@ -25,7 +26,7 @@ function CalculationLine({name, variable, value, units, formula='-', highlight=f
 
     return (
         <>
-            <Grid size={2}>
+            <Grid size={2.5}>
                 <Typography {...props}>{name}</Typography>
             </Grid>
             <Grid size={1}>
@@ -40,8 +41,8 @@ function CalculationLine({name, variable, value, units, formula='-', highlight=f
             <Grid size={3}>
                 <Typography {...props}>{formula}</Typography>
             </Grid>
-            <Grid sx={{pl:4}} size={4}>
-                {error.msg ? <Typography fontFamily={props.sx.fontFamily} color={error.msg ? 'red' : 'black'}>{error.msg}</Typography> : <div></div>}
+            <Grid sx={{pl:4}} size={3.5}>
+                {message.msg ? <Typography fontFamily={props.sx.fontFamily} color={error ? 'red' : 'black'}>{message.msg}</Typography> : <div></div>}
             </Grid>
         </>
     )

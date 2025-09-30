@@ -15,7 +15,7 @@ function CalculationHeader () {
 
     return (
         <>
-            <Grid size={2}>
+            <Grid size={2.5}>
                 <Typography {...props}>description</Typography>
             </Grid>
             <Grid size={1}>
@@ -27,10 +27,10 @@ function CalculationHeader () {
             <Grid size={1}>
                 <Typography {...props}>units</Typography>
             </Grid>
-            <Grid size={2}>
+            <Grid size={3}>
                 <Typography {...props}>formula</Typography>
             </Grid>
-            <Grid size={5}>
+            <Grid size={3.5}>
                 <div></div>
             </Grid>
         </>

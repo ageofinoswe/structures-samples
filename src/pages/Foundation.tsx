@@ -341,7 +341,7 @@ function Foundation() {
                     <Stack>          
                         <Typography variant='subtitle1'>Dimensions</Typography>
                         {dimensionInput.map(textInputProps => 
-                            <TextField {...textInputProps}/>
+                            <TextField key={textInputProps.label} {...textInputProps}/>
                         )}
                     </Stack>
                 </Grid>
@@ -361,7 +361,7 @@ function Foundation() {
                         <Typography variant='subtitle1'>Point Loads</Typography>
                             <Box display='flex' alignItems='center'>
                                 {pointLoadTextInputFields.map(field => 
-                                    <>
+                                    <React.Fragment key={field + '_pointload'}>
                                         {/* plus is active/selected if magnitude is >= 0, attach negate function to button */}
                                         <PlusOrMinus active={field === 'kips' ? pointLoad.kips >= 0 : field === 'B' ? pointLoad.coordB >= 0 : pointLoad.coordL >= 0} field={field} negate={negatePointLoad}></PlusOrMinus>
                                         {/* disable opposite eccentricity direction */}
@@ -373,7 +373,7 @@ function Foundation() {
                                                 size='small'
                                                 variant='standard'
                                                 onChange={event => handleModifyPointLoad(event, field)}/>
-                                    </>
+                                    </React.Fragment>
                                 )}
                             </Box>
                     </Stack>
@@ -395,7 +395,7 @@ function Foundation() {
                         <Typography variant='subtitle1'>Moment</Typography>
                             <Box alignItems='center' display='flex'>
                                 {momentTextInputFields.map(field =>
-                                <>
+                                <React.Fragment key={field + '_moment'}>
                                     {/* plus is active/selected if magnitude is >= 0, attach negate function to button */}
                                     <PlusOrMinus active={field === 'kipft' ? moment.kipft >= 0 : field === 'B' ? moment.coordB >= 0 : moment.coordL >= 0} field={field} negate={negateMoment}></PlusOrMinus>
                                     {/* disable opposite eccentricity direction */}
@@ -407,7 +407,7 @@ function Foundation() {
                                         size='small'
                                         variant='standard'
                                         onChange={event => handleModifyMoment(event, field)}/>
-                                </>
+                                </React.Fragment>
                                 )}
                             </Box>
                     </Stack>
@@ -533,10 +533,10 @@ function Foundation() {
                         <CalculationLine name="moment stress about BB" variable="q_bb" value={(Math.abs(calculationsSums.sumMl)) / calculations.foundation.S_bb} units='ksf' formula='Mt_l / S_bb'/>
                         <CalculationLine name="moment stress about LL" variable="q_ll" value={Math.abs((calculationsSums.sumMb)) / calculations.foundation.S_ll} units='ksf' formula='Mt_b / S_ll'/>
                         {/* trapezoidal foundation bearing distribution */}
-                        <CalculationLine name="q max along B" variable="qb_max" value={calculationsPressuresTrapezoid.b.qmax} units='ksf' formula='Pv/A + (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0)? 'NG, uplift' : ''}}/>
-                        <CalculationLine name="q min along B" variable="qb_min" value={calculationsPressuresTrapezoid.b.qmin} units='ksf' formula='Pv/A - (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0) ? 'NG, uplift' : ''}}/>
-                        <CalculationLine name="q max along L" variable="ql_max" value={calculationsPressuresTrapezoid.l.qmax} units='ksf' formula='Pv/A + (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0)? 'NG, uplift' : ''}}/>
-                        <CalculationLine name="q min along L" variable="ql_min" value={calculationsPressuresTrapezoid.l.qmin} units='ksf' formula='Pv/A - (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q max along B" variable="qb_max" value={calculationsPressuresTrapezoid.b.qmax} units='ksf' formula='Pv/A + (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={true} message={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0)? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q min along B" variable="qb_min" value={calculationsPressuresTrapezoid.b.qmin} units='ksf' formula='Pv/A - (Mt_b / S_ll)' highlight={eccentricityDirection==='B'} error={true} message={{msg: (calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0) ? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q max along L" variable="ql_max" value={calculationsPressuresTrapezoid.l.qmax} units='ksf' formula='Pv/A + (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={true} message={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0)? 'NG, uplift' : ''}}/>
+                        <CalculationLine name="q min along L" variable="ql_min" value={calculationsPressuresTrapezoid.l.qmin} units='ksf' formula='Pv/A - (Mt_l / S_bb)' highlight={eccentricityDirection==='L'} error={true} message={{msg: (calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.l.qmax < 0) ? 'NG, uplift' : ''}}/>
                         {/* triangular foundation bearing distribution if any of the trapezoidal foundation bearing distributions are < 0*/}
                         {(calculationsPressuresTrapezoid.b.qmin < 0 || calculationsPressuresTrapezoid.l.qmin < 0 || calculationsPressuresTrapezoid.b.qmax < 0 || calculationsPressuresTrapezoid.l.qmax < 0)
                             &&
