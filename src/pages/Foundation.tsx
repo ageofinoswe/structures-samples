@@ -328,11 +328,11 @@ function Foundation() {
     return (
         <>  
             {/* TITLE */}
-            <Divider />
+            <Divider/>
             <Box>
                 <Typography variant='h1' align='center' sx={{fontSize: '3em'}}>Foundation Bearing Pressure</Typography>
             </Box>
-            <Divider />
+            <Divider/>
 
             {/* INPUT FIELDS: dimensions, point loads, moments*/}
             <Grid container sx={{py: 1}} spacing={20}>
@@ -420,7 +420,7 @@ function Foundation() {
                 &&
                 <>
                     {/* TITLE */}
-                    <Divider />
+                    <Divider/>
                     <Box>
                         <Typography variant='h2' align='center' sx={{mt: 2,fontSize: '2em'}}>Foundation and Applied Loads</Typography>
                     </Box>
@@ -475,9 +475,8 @@ function Foundation() {
                         </svg>
                     </Box>
 
-                    <Divider sx={{mt: 3}} />
-                    
                     {/* CALCULATIONS SECTION */}
+                    <Divider sx={{mt: 3}}/>
                     <Box>
                         <Typography variant='h3' align='left' sx={{my: 2, fontSize: '2em'}}>Calculations</Typography>
                     </Box>
