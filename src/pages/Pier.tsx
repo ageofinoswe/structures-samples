@@ -127,7 +127,7 @@ function Pier() {
         const delta = 0.25;
         // increase depth by 0.1ft, allow 1000 iterations (up to 100 ft for convergence)
         const increment = 0.1;
-        let iterationBoundary = 100;
+        let iterationBoundary = 10000;
         let converged: boolean = false
         // not constrained; IBC 1807.3.2.1
         if(!constrained && diameter !== '0' && passivePressure !== '0'){
@@ -382,9 +382,9 @@ function Pier() {
                 <Typography {...calcProps}>Applied Loads</Typography>
                 <Grid container>
                     <CalculationHeader/>
-                    <CalculationLine name="point load" variable="P" value={calcs.P} units='kips'/>
+                    <CalculationLine name="point load" variable="P" value={calcs.P} units='lbf'/>
                     <CalculationLine name="point load height" variable="h" value={calcs.h} units='ft'/>
-                    <CalculationLine name="moment at toc" variable="Mg" value={calcs.P * calcs.h} units='kip-ft' formula='P * h'/>
+                    <CalculationLine name="moment at toc" variable="Mg" value={calcs.P * calcs.h} units='lbf-ft' formula='P * h'/>
                 </Grid>
                 {/* PIER PROPERTIES */}
                 <Typography {...calcProps}>Pier Properties</Typography>

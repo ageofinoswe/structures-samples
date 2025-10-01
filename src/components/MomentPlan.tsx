@@ -125,7 +125,7 @@ function MomentPlan({x, y, magnitude, along, rotate=false} : MomentProps) {
 
     return (
         <>
-            {drawMomentArrow().map(line => <line {...line} {...drawingProps}/>)}
+            {drawMomentArrow().map(line => <line key={line.x1 + line.x2 + line.y1 + line.y2} {...line} {...drawingProps}/>)}
         </>
     )
 }
