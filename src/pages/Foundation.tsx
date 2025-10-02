@@ -77,7 +77,7 @@ function Foundation() {
     const [fdnWidth, setFdnWidth] = React.useState(0);
     const [fdnHeight, setFdnHeight] = React.useState(0);
     const [fdnThickness, setFdnThickness] = React.useState(0);
-    const [fdnDensity, setFdnDensity] = React.useState(0.145);
+    const [fdnDensity, _setFdnDensity] = React.useState(0.145);
     const [fdnCenter, setFdnCenter] = React.useState([0,0]);
     // point load and moment
     const [pointLoad, setPointLoad] = React.useState<PointLoad>({kips: 0, coordB: 0, coordL: 0});
@@ -148,7 +148,7 @@ function Foundation() {
 
     // FUNCTIONS
     // used to switch between +/- in user inputs for the point load fields
-    const negatePointLoad: (event: any, field: string) => void = (event, field) => {
+    const negatePointLoad: (_event: any, field: string) => void = (_event, field) => {
         const modifiedPointLoads: PointLoad = 
             {...pointLoad,
                 kips: field === 'kips' ? pointLoad.kips * -1 : pointLoad.kips,
@@ -158,7 +158,7 @@ function Foundation() {
         setPointLoad(modifiedPointLoads);
     }
     // used to switch between +/- in user inputs for the moment fields
-    const negateMoment: (event: any, field: string) => void = (event, field) => {
+    const negateMoment: (_event: any, field: string) => void = (_event, field) => {
         const modifiedMoment: Moment = 
             {...moment,
                 kipft: field === 'kipft' ? moment.kipft * -1 : moment.kipft,
