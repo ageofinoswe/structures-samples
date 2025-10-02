@@ -34,7 +34,7 @@ function Navbar() {
         <>
             <AppBar position="static" color="default" elevation={0} sx={{backgroundColor: 'white'}}>
                 <Toolbar disableGutters={true}>
-                    <img src='/src/assets/bridge.png' style={{height: 60, width: 'auto'}}></img>
+                    <img src='./bridge.png' style={{height: 60, width: 'auto'}}></img>
                     <Typography fontSize={50} fontStyle='italic' fontFamily='cursive'>S</Typography>
                     <Stack>
                         <Typography sx={logoText} pt={0.5} >tructural</Typography>
